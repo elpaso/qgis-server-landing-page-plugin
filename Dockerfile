@@ -12,4 +12,4 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y qgis-server xvfb && \
     apt-get clean
 
-CMD ["/usr/bin/xvfb-run", "/usr/bin/qgis_mapserver", "${QGIS_SERVER_HOSTNAME_PORT}"]
+CMD ["/usr/bin/xvfb-run", "/usr/bin/qgis_mapserver"]

@@ -1,0 +1,15 @@
+[general]
+name=Landing Page API plugin
+qgisMinimumVersion=3.10
+description=QGIS Server Landing Page API plugin
+version=version 1.0
+author=Alessandro Pasotti (ItOpen)
+email=elpaso@itopen.it
+server=True
+
+changelog=
+
+about=Adds a landing page to the server root path with
+  optional project listing from a specified directory.
+  The absolute path to the projects directory can be set
+  with the environment variable QGIS_SERVER_PROJECTS_DIRECTORY.

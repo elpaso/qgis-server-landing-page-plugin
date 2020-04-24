@@ -1,0 +1,19 @@
+{% include "header.html" %}
+
+    <h1>QGIS Server</h1>
+
+    <h2>Available Projects</h2>
+
+    {% for project in projects %}
+    <code>
+        {{ project.title }}
+    </code>
+    {% endfor %}
+
+
+    <pre class="jref">
+        {{ json_dump() }}
+    </pre>
+
+{% include "footer.html" %}
+
