@@ -13,6 +13,7 @@ __date__ = '2020-04-24'
 __copyright__ = 'Copyright 2020, ItOpen'
 
 import os
+import hashlib
 from qgis.core import QgsApplication
 from qgis.server import QgsServer, QgsBufferServerRequest, QgsBufferServerResponse
 from qgis.testing import TestCase, unittest
@@ -34,13 +35,13 @@ class TestLandingPage(TestCase):
 
     def test_projects(self):
         _projects = '|'.join(projects())
-        self.assertTrue('Project1.qgs' in _projects)
-        self.assertTrue('Project2.qgz' in _projects)
+        self.assertTrue(hashlib.md5('Project1.qgs'.encode('utf8')).hexdigest() in _projects)
+        self.assertTrue(hashlib.md5('Project2.qgz'.encode('utf8')).hexdigest() in _projects)
 
     def test_project_info(self):
-        path = sorted(projects())[0]
+        path = sorted(projects().values())[0]
         info = project_info(path)
-        self.assertTrue(info != {})
+        self.assertEqual(info['title'], 'Project2 Title')
 
     def test_landing_page(self):
         request = QgsBufferServerRequest('/')
@@ -48,8 +49,6 @@ class TestLandingPage(TestCase):
         self.server.handleRequest(request, response)
         self.assertTrue(b'html' in bytes(response.body()), response.body())
         self.assertEqual(response.statusCode(), 200)
-
-
 
 
 if __name__ == '__main__':

@@ -15,6 +15,8 @@ __copyright__ = 'Copyright 2020, ItOpen'
 
 import json
 import os
+import re
+import hashlib
 
 from qgis.PyQt.QtCore import QBuffer, QIODevice, QTextStream, QRegularExpression
 from qgis.server import (
@@ -23,10 +25,11 @@ from qgis.server import (
     QgsServerOgcApi,
     QgsServerOgcApiHandler,
     QgsServerProjectUtils,
+    QgsServerFilter,
 )
 
 from qgis.core import (
-    QgsProject,
+    QgsProject, QgsMessageLog
 )
 
 from qgis.PyQt.QtCore import Qt
@@ -35,25 +38,26 @@ from qgis.PyQt.QtCore import Qt
 def projects():
     """Returns a list of available projects
 
-    :return: list of project paths (or other storage identifiers)
-    :rtype: list
+    :return: hash of project paths (or other storage identifiers) with a digest key
+    :rtype: dict
     """
-    projects = []
+    projects = {}
     if not os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY', False):
         return projects
 
     for f in os.listdir(os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY')):
         if f.upper().endswith('.QGS') or f.upper().endswith('.QGZ'):
-            projects.append(os.path.join(os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY'), f))
+            project_key = hashlib.md5(f.encode('utf8')).hexdigest()
+            projects[project_key] = os.path.join(os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY'), f)
 
     return projects
 
-def project_info(projects_path):
-    """Extract project information an returns it as a dictionary"""
+def project_info(project_path):
+    """Extract project information and returns it as a dictionary"""
 
     info = {}
     p = QgsProject()
-    if p.read(projects_path):
+    if p.read(project_path):
 
         ####################################################
         # Main section
@@ -174,7 +178,9 @@ def project_info(projects_path):
 
     return info
 
+
 class LandingPageApiHandler(QgsServerOgcApiHandler):
+    """Project listing handler"""
 
     def __init__(self):
         super().__init__()
@@ -206,9 +212,15 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
             "navigation": []
         }
 
+        projects_data = []
+        for project_id, project_identifier in projects().items():
+            data = project_info(project_identifier)
+            data['id'] = project_id
+            projects_data.append(data)
+
         self.write({
                 'links': [],
-                'projects': [project_info(p) for p in projects()]
+                'projects': projects_data
             },
             context,
             html_metadata)
@@ -220,11 +232,36 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
         return []
 
 
-class LandingPageApi():
+class LandingPageApi(QgsServerOgcApi):
+    """Overrides accept to only trigger on /"""
+
+    def accept(self, url):
+        return url.path() == '/' or url.path() == ''
+
+
+class ProjectLoaderFilter(QgsServerFilter):
+    """Load the specified project"""
+
+    project_id_re = re.compile(r'/project/([a-f0-9]{32})')
+
+    def requestReady(self):
+        handler = self.serverInterface().requestHandler()
+        project_dict = projects()
+        try:
+            os.environ['QGIS_PROJECT_FILE'] = project_dict[self.project_id_re.findall(handler.url())[0]]
+        except Exception as ex:
+            QgsMessageLog.logMessage('Could not get project from url: %s' % ex)
+
+
+class LandingPageApiLoader():
+    """The landing page plugin loader"""
 
     def __init__(self, serverIface):
-        self.api = QgsServerOgcApi(serverIface, '/',
+        self.api = LandingPageApi(serverIface, '',
                               'Landing Page API', 'Landing Page API', '1.0')
         self.handler = LandingPageApiHandler()
         self.api.registerHandler(self.handler)
         serverIface.serviceRegistry().registerApi(self.api)
+        self.loader_filter = ProjectLoaderFilter(serverIface)
+        serverIface.registerFilter( self.loader_filter, 1)
+

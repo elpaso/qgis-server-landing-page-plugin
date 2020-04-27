@@ -1,14 +1,89 @@
 {% include "header.html" %}
 
+
     <h1>QGIS Server</h1>
 
     <h2>Available Projects</h2>
 
-    {% for project in projects %}
-    <code>
-        {{ project.title }}
-    </code>
-    {% endfor %}
+
+    {% if not length(projects) %}
+    <div class="alert alert-warning" role="alert">
+       Your server installation does not contain any project.
+    </div>
+    {% else %}
+        {% for project in projects %}
+        <div class="card mb-4">
+            <h5 class="card-header">{{ {{ project.title }}</h5>
+            <div class="card-body">
+
+                <button class="btn btn-link" role="button" href="#metadata-{{ project.id }}" data-toggle="collapse" data-target="#metadata-{{ project.id }}" aria-expanded="false" aria-controls="metadata-{{ project.id }}">
+                    Metadata
+                </button>
+
+                <a class="btn btn-link" role="button" href="/project/{{ project.id }}/wfs3">Browse WFS3</a>
+
+                <div id="metadata-{{ project.id }}" class="collapse hide" aria-labelledby="metadata-{{ project.id }}">
+                    <dl class="row">
+                        {% for entry, value in project.metadata %}
+                        {% if entry == "links" %}
+                        <dt class="col-sm-3">{{ entry }}</dt>
+                        <dd class="col-sm-9">
+                            <ul>
+                                {% for item in value %}
+                                    <li>
+                                        <a href="{{ item.url }}">{{ item.name }}</a> &mdash; {{ item.description }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </dd>
+                        {% else %}
+                            {% if entry == "categories" or entry == "history" %}
+                            <dt class="col-sm-3">{{ entry }}</dt>
+                            <dd class="col-sm-9">
+                                <ul>
+                                    {% for item in value %}
+                                        <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </dd>
+                            {% else %}
+                                {% if entry == "contacts" %}
+                                <dt class="col-sm-3">Contacts</dt>
+                                <dd class="col-sm-9">
+                                {% for contact in value %}
+                                    <strong>{{ contact.name }}</strong>
+                                    <dl class="row">
+                                    {% for ce, cv in contact %}
+                                        {% if ce != "addresses" and ce != "name" %}
+                                        <dt class="col-sm-3">{{ ce }}</dt>
+                                        <dd class="col-sm-9">{{ cv }}</dd>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </dl>
+                                    {% for address in contact.addresses %}
+                                        <dl class="row">
+                                        {% for ae, av in address %}
+                                            <dt class="col-sm-3">{{ ae }}</dt>
+                                            <dd class="col-sm-9">{{ av }}</dd>
+                                        {% endfor %}
+                                        </dl>
+                                    {% endfor %}
+                                {% endfor %}
+                                </dd>
+                                {% else %}
+                                <dt class="col-sm-3">{{ entry }}</dt>
+                                <dd class="col-sm-9">{{ value }}</dd>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                    </dl>
+                </div><!-- // metadata-{{ project.id }} -->
+
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
 
 
     <pre class="jref">
