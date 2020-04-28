@@ -34,7 +34,7 @@
                     {% endif %}
 
                     var overlay = L.WMS.overlay("'/project/{{ project.id }}/?'", {
-                        'layers': {% if project.capabilities.wmsRootName %}'{{ project.capabilities.wmsRootName }}'{%else%}'{{ project.title }}'{% endif %},
+                        'layers': '{{ project.wms_root_name }}',
                         'transparent': true,
                         'format': 'image/png',
                     }).addTo(map);

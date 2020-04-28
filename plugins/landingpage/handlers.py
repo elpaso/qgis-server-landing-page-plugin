@@ -121,6 +121,7 @@ class MapApiHandler(QgsServerOgcApiHandler):
         project_identifier = self.project_id_re.findall(context.request().url().toString())[0]
         # TODO: cache this thing!
         project_data = project_info(projects()[project_identifier])
+        project_data['id'] = project_identifier
 
         self.write({
                 'links': [],

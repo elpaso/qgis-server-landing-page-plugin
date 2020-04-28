@@ -314,14 +314,19 @@ def project_info(project_path):
         ####################################################
         # WMS Layers section
 
+        info['wms_root_name'] = capabilities['wmsRootName'] if capabilities['wmsRootName'] else p.name()
         restricted_wms = capabilities['wmsRestrictedLayers']
         wms_layers = {}
+        wms_layers_map = {}
+        use_ids = capabilities['wmsUseLayerIds']
 
         for l in p.mapLayers().values():
             if l.name() not in restricted_wms:
                 wms_layers[l.id()] = layer_info(l)
+                wms_layers_map[l.displayName()] = l.id() if use_ids else l.displayName()
 
         info['wms_layers'] = wms_layers
+        info['wms_layers_map'] = wms_layers_map
 
         ####################################################
         # WFS Layers section TODO

@@ -40,6 +40,7 @@
         <div id="map">
 
             <script type="text/javascript">
+                var title_map = {{ project.title_map }};
                 // project map
                 {
                     {% if "EPSG:3857" in project.capabilities.wmsOutputCrsList %}
@@ -61,6 +62,25 @@
 
                     map.fitBounds([p1, p2, p3, p4]);
                 };
+
+                var toc_url = "/project/{{ project.id }}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS={{ project.wms_root_name }}&FORMAT=application/json";
+                var layers = {};
+                $.getJSON(toc_url, function( data )
+                {
+                    var walker = function(i, node) {
+                        if ( node.type == "layer")
+                        {
+                            // Node title map to id if requires id
+                            var overlay = L.WMS.overlay("/project/{{ project.id }}/?", {
+                                'layers': node.title,
+                                'transparent': true,
+                                'format': 'image/png',
+                            }).addTo(map);
+                            layers[node.title] = overlay;
+                        }
+                    };
+                    $.each(data.nodes, walker);
+                });
 
             </script>
         </div>
