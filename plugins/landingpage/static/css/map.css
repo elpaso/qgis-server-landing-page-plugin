@@ -1,0 +1,10 @@
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+}
+
+#map, .wrapper  {
+    height: 100%;
+}

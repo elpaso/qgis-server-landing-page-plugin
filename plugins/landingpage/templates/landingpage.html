@@ -1,0 +1,164 @@
+{% include "header.html" %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+            integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+            crossorigin=""/>
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+        integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin="">
+    </script>
+    <script src="/static/js/leaflet.wms.js"></script>
+
+    <h1>QGIS Map Server</h1>
+
+    {% if not length(projects) %}
+    <div class="alert alert-warning" role="alert">
+       Your server installation does not contain any project.
+    </div>
+    {% else %}
+        {% for project in projects %}
+        <div class="card mb-4">
+
+            <h5 class="card-header">{{ project.title }}</h5>
+            <div class="card-body">{{ project.description }}</div>
+            <div id="mapid-{{ project.id }}" class="card-body" style="height: 20rem;">
+                <script type="text/javascript">
+                // project map
+                {
+                    {% if "EPSG:3857" in project.capabilities.wmsOutputCrsList %}
+                    var map = L.map('mapid-{{ project.id }}').setView([0, 0], 13);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map)
+                    {% endif %}
+
+                    var overlay = L.WMS.overlay("'/project/{{ project.id }}/?'", {
+                        'layers': {% if project.capabilities.wmsRootName %}'{{ project.capabilities.wmsRootName }}'{%else%}'{{ project.title }}'{% endif %},
+                        'transparent': true,
+                        'format': 'image/png',
+                    }).addTo(map);
+
+                    var west = {{ project.geographic_extent.0 }};
+                    var south = {{ project.geographic_extent.1 }};
+                    var east = {{ project.geographic_extent.2 }};
+                    var north = {{ project.geographic_extent.3 }};
+                    var p1 = new L.LatLng(south, west);
+                    var p2 = new L.LatLng(north, west);
+                    var p3 = new L.LatLng(north, east);
+                    var p4 = new L.LatLng(south, east);
+                    var polygonPoints = [p1, p2, p3, p4];
+
+                    var jl = new L.Polygon(polygonPoints, {fill: false}).addTo(map);
+                    map.setView(jl.getBounds().getCenter());
+                    if ( jl.getBounds().getEast() != jl.getBounds().getWest() && jl.getBounds().getNorth() != jl.getBounds().getSouth() )
+                    {
+                        map.fitBounds(jl.getBounds());
+                    }
+                };
+
+                </script>
+            </div><!-- // mapid-{{ project.id }} -->
+
+
+            <div class="card-body">
+
+                <button class="btn btn-info" role="button" href="#metadata-{{ project.id }}" data-toggle="collapse" data-target="#metadata-{{ project.id }}" aria-expanded="false" aria-controls="metadata-{{ project.id }}">
+                    Metadata
+                </button>
+
+                <a class="btn btn-primary" role="button" href="/map/{{ project.id }}/">Map</a>
+
+                <a class="btn btn-primary" role="button" href="/project/{{ project.id }}/wfs3">OAPIF/WFS3</a>
+
+                <a class="btn btn-primary" role="button" href="/project/{{ project.id }}/?SERVICE=WFS&REQUEST=GetCapabilities">WFS GetCapabilities</a>
+
+                <a class="btn btn-primary" role="button" href="/project/{{ project.id }}/?SERVICE=WMS&REQUEST=GetCapabilities">WMS GetCapabilities</a>
+
+
+                <div id="metadata-{{ project.id }}" class="card-text collapse hide" aria-labelledby="metadata-{{ project.id }}">
+                    <p class="card-text">
+                        <dl class="row">
+                            {% for entry, value in project.metadata %}
+                            {% if entry == "links" %}
+                            <dt class="col-sm-3">{{ entry }}</dt>
+                            <dd class="col-sm-9">
+                                <ul>
+                                    {% for item in value %}
+                                        <li>
+                                            <a href="{{ item.url }}">{{ item.name }}</a> &mdash; {{ item.description }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </dd>
+                            {% else %}
+                                {% if entry == "categories" or entry == "history" %}
+                                <dt class="col-sm-3">{{ entry }}</dt>
+                                <dd class="col-sm-9">
+                                    <ul>
+                                        {% for item in value %}
+                                            <li>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
+                                {% else %}
+                                    {% if entry == "contacts" %}
+                                    <dt class="col-sm-3">Contacts</dt>
+                                    <dd class="col-sm-9">
+                                    {% for contact in value %}
+                                        <strong>{{ contact.name }}</strong>
+                                        <dl class="row">
+                                        {% for ce, cv in contact %}
+                                            {% if ce != "addresses" and ce != "name" %}
+                                            <dt class="col-sm-3">{{ ce }}</dt>
+                                            <dd class="col-sm-9">{{ cv }}</dd>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </dl>
+                                        {% for address in contact.addresses %}
+                                            <dl class="row">
+                                            {% for ae, av in address %}
+                                                <dt class="col-sm-3">{{ ae }}</dt>
+                                                <dd class="col-sm-9">{{ av }}</dd>
+                                            {% endfor %}
+                                            </dl>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    </dd>
+                                    {% else %}
+                                    <dt class="col-sm-3">{{ entry }}</dt>
+                                    <dd class="col-sm-9">{{ value }}</dd>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                        </dl>
+                    </p>
+                </div><!-- // metadata-{{ project.id }} -->
+
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+
+    <pre class="jref">
+        {{ json_dump() }}
+    </pre>
+
+
+    <script type="text/javascript">
+        var toTitleCase = function (str) {
+            str = str.replace( /([A-Z])/g, " $1" ).toLowerCase().split(' ');
+            for (var i = 0; i < str.length; i++) {
+                str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+            }
+            return str.join(' ');
+        };
+        $('dt').each(function(i, e){
+            $(e).text(toTitleCase($(e).text()));
+        });
+    </script>
+
+{% include "footer.html" %}
+
