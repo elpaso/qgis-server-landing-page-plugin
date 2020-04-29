@@ -19,7 +19,17 @@ from qgis.core import QgsApplication, QgsProject
 from qgis.server import QgsServer, QgsBufferServerRequest, QgsBufferServerResponse
 from qgis.testing import TestCase, unittest
 from landingpage.landingpage import LandingPageApiLoader
-from landingpage.utils import projects, project_info, project_wms, layer_info
+from landingpage.utils import (
+    projects,
+    project_info,
+    project_wms,
+    layer_info,
+    get_toc,
+)
+
+from qgis.server import (
+    QgsServerProjectUtils,
+)
 
 os.environ['QGIS_SERVER_PROJECTS_DIRECTORY'] = os.path.join(os.path.dirname(__file__), 'projects')
 
@@ -44,8 +54,8 @@ class TestLandingPage(TestCase):
         path = sorted(projects().values())[1]
         info = project_info(path)
         self.assertEqual(info['title'], 'Project2 Title')
-        self.assertEqual(info['toc']['children'][0]['name'], 'points_3857')
-        self.assertEqual(len(info['toc']['children']), 1)
+        self.assertEqual(info['toc'][0]['name'], 'points_3857')
+        self.assertEqual(len(info['toc']), 1)
 
     def test_layer_info(self):
         p = QgsProject()
@@ -81,6 +91,13 @@ class TestLandingPage(TestCase):
         self.server.handleRequest(request, response)
         self.assertTrue(b'html' in bytes(response.body()), response.body())
         self.assertEqual(response.statusCode(), 200)
+
+    def test_get_toc(self):
+        p = QgsProject()
+        p.read(os.path.join(os.path.dirname(__file__), 'projects', 'test_project_wms_grouped_nested_layers.qgs'))
+        toc = get_toc(p)
+        print(toc)
+
 
 
 if __name__ == '__main__':

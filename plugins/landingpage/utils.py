@@ -25,10 +25,18 @@ from qgis.core import (
     QgsProject,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
+    QgsMapLayerType,
+    QgsLegendRenderer,
+    QgsRenderContext,
+    QgsLegendModel,
+    QgsLegendSettings,
 )
 
 def projects():
-    """Returns a list of available projects
+    """Returns a list of available projects from various sources:
+
+    - QGIS_SERVER_PROJECTS_DIRECTORY directory
+    - QGIS_SERVER_PROJECTS_CONNECTION DB connection
 
     :return: hash of project paths (or other storage identifiers) with a digest key
     :rtype: dict
@@ -45,28 +53,81 @@ def projects():
     return projects
 
 
-def get_toc(project, restricted_wms):
+def get_toc(project):
+    """Get the WMS TOC information for the project"""
 
-    def _harvest(node):
+    use_ids = QgsServerProjectUtils.wmsUseLayerIds(project)
+
+    # Legend symbols
+    model = QgsLegendModel(project.layerTreeRoot())
+    ctx = QgsRenderContext()
+    settings = QgsLegendSettings()
+    renderer = QgsLegendRenderer(model, settings)
+    nodes = renderer.exportLegendToJson(ctx)['nodes'].toVariant()
+
+    # Flatten
+    flat_nodes = {}
+
+    def _walker(node, name, flat_nodes):
+        name = name + '.' + node['title']
+        flat_nodes[name] = node
+
+        try:
+            for n in node['nodes']:
+                _walker(n, name, flat_nodes)
+        except KeyError:
+            pass
+
+        try:
+           del flat_nodes[name]['nodes']
+        except KeyError:
+            pass
+
+    [_walker(n, 'root', flat_nodes) for n in nodes]
+
+    def _harvest(node, parent_id):
         rec = {
+            'title': node.name(),  # Override with title for layers
             'name': node.name(),
             'expanded': node.isExpanded(),
             'visible': node.isVisible(),
         }
         try:
-            rec['layer_id'] = node.layerId()
+            rec['id'] = node.layerId()
+            short_name = node.layer().shortName() if node.layer().shortName() else node.layer().name()
+            rec['typename'] = node.layer().id() if use_ids else short_name
+            # Override title
+            if node.layer().title():
+                rec['title'] = node.layer().title()
+            if node.layer().type() not in (QgsMapLayerType.VectorLayer, QgsMapLayerType.RasterLayer):
+                raise Exception
+            rec['layer_type'] = 'vector' if node.layer().type() == QgsMapLayerType.VectorLayer else 'raster'
+            rec['has_scale_based_visibility'] = node.layer().hasScaleBasedVisibility()
+            if rec['has_scale_based_visibility']:
+                rec['min_scale'] = node.layer().minimumScale()
+                rec['max_scale'] = node.layer().maximumScale()
             rec['is_layer'] = True
         except AttributeError:
             rec['is_layer'] = False
+
+        rec['tree_id'] = parent_id + '.' + rec['title']
+
+        try:
+            rec.update(flat_nodes[rec['tree_id']])
+        except:
+            pass
+
         children = []
-        for cn in node.children():
-            c = _harvest(cn)
-            if c['is_layer'] and c['name'] not in restricted_wms:
-                children.append(c)
+        for cn in [n for n in node.children() if n.name() not in QgsServerProjectUtils.wmsRestrictedLayers(project)]:
+            try:
+                children.append(_harvest(cn, rec['tree_id']))
+            except:
+                pass
+
         rec['children'] = children
         return rec
 
-    return _harvest(project.layerTreeRoot())
+    return [_harvest(c , 'root') for c in project.layerTreeRoot().children()]
 
 def project_wms(project, crs):
     """Calculate the extent from WMS advertized (if defined) or from
@@ -232,6 +293,7 @@ def project_info(project_path):
 
         ####################################################
         # Metadata section
+
         m = p.metadata()
         metadata = {}
         for prop in (
@@ -314,25 +376,25 @@ def project_info(project_path):
         ####################################################
         # WMS Layers section
 
-        info['wms_root_name'] = capabilities['wmsRootName'] if capabilities['wmsRootName'] else p.name()
+        info['wms_root_name'] = capabilities['wmsRootName'] if capabilities['wmsRootName'] else p.title()
         restricted_wms = capabilities['wmsRestrictedLayers']
         wms_layers = {}
-        wms_layers_map = {}
         use_ids = capabilities['wmsUseLayerIds']
+        # Map layer title to layer name (or id if use_ids)
+        wms_layers_map = {}
 
         for l in p.mapLayers().values():
             if l.name() not in restricted_wms:
                 wms_layers[l.id()] = layer_info(l)
-                wms_layers_map[l.displayName()] = l.id() if use_ids else l.displayName()
+                name = l.title() if l.title() else l.name()
+                short_name = l.shortName() if l.shortName() else l.name()
+                wms_layers_map[name] = l.id() if use_ids else short_name
 
         info['wms_layers'] = wms_layers
         info['wms_layers_map'] = wms_layers_map
 
         ####################################################
-        # WFS Layers section TODO
-
-        ####################################################
-        # TOC tree
-        info['toc'] = get_toc(p, restricted_wms)
+        # TOC tree (WMS published only)
+        info['toc'] = get_toc(p)
 
     return info

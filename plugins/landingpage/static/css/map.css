@@ -5,6 +5,79 @@ html, body {
     width: 100%;
 }
 
-#map, .wrapper  {
+#map {
     height: 100%;
+    width: 100%;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: stretch;
+}
+
+
+/* Sidebar */
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+
+#sidebar.active {
+    margin-left: -250px;
+}
+
+/*
+#sidebar ul.components {
+     padding: 20px 0;
+}
+*/
+
+#sidebar .sidebar-header {
+    padding: 20px;
+}
+
+#sidebar a[data-toggle="collapse"] {
+    position: relative;
+    display: block;
+}
+
+#sidebar .dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+}
+
+#sidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
+}
+
+#sidebar ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 30px !important;
+}
+
+#sidebarCollapse {
+    display: block;
+    position: absolute;
+    top: 67px;
+    right: 18px;
 }

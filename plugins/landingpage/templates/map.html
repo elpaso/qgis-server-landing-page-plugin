@@ -21,30 +21,119 @@
     integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
     crossorigin=""/>
 
-    <!-- extra css for map page -->
-    <link rel="stylesheet" href="/static/css/map.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
-    <!-- Make sure you put this AFTER Leaflet's CSS -->
-    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
-    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin="">
-    </script>
-    <script src="/static/js/leaflet.wms.js"></script>
+
+    <!-- Extra css for map page -->
+    <link rel="stylesheet" href="/static/css/map.css" />
 
     <title>{{ metadata.pageTitle }}</title>
 
   </head>
   <body>
 
+    <div id="sidebarCollapse" class="leaflet-control-layers leaflet-control" aria-haspopup="true">
+        <a class="leaflet-control-layers-toggle" href="#" title="Layers"></a>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">{{ project.title }}</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+            <a class="nav-link" href="../">Home<span class="sr-only">(current)</span></a>
+            </li>
+            <!--
+            <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Dropdown
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="#">Action</a>
+                <a class="dropdown-item" href="#">Another action</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Something else here</a>
+            </div>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+            </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+        -->
+        </div>
+    </nav><!-- // navbar -->
+
     <div class="wrapper">
 
-        <div id="map">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Layers</h3>
+            </div>
 
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Home</a>
+                    <ul class="collapse list-unstyled" id="homeSubmenu">
+                        <li>
+                            <a href="#">Home 1</a>
+                        </li>
+                        <li>
+                            <a href="#">Home 2</a>
+                        </li>
+                        <li>
+                            <a href="#">Home 3</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">About</a>
+                </li>
+                <li>
+                    <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Pages</a>
+                    <ul class="collapse list-unstyled" id="pageSubmenu">
+                        <li>
+                            <a href="#">Page 1</a>
+                        </li>
+                        <li>
+                            <a href="#">Page 2</a>
+                        </li>
+                        <li>
+                            <a href="#">Page 3</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">Portfolio</a>
+                </li>
+                <li>
+                    <a href="#">Contact</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- map -->
+        <div id="map">
             <script type="text/javascript">
-                var title_map = {{ project.title_map }};
                 // project map
-                {
+                var map;
+                var wms_layers_map;
+                var wms_toc_tree;
+                $(function(){
+                    wms_layers_map = {{ project.wms_layers_map }};
                     {% if "EPSG:3857" in project.capabilities.wmsOutputCrsList %}
-                    var map = L.map('map').setView([0, 0], 13);
+                    map = L.map('map').setView([0, 0], 13);
 
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -61,31 +150,40 @@
                     var p4 = new L.LatLng(south, east);
 
                     map.fitBounds([p1, p2, p3, p4]);
-                };
 
-                var toc_url = "/project/{{ project.id }}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS={{ project.wms_root_name }}&FORMAT=application/json";
-                var layers = {};
-                $.getJSON(toc_url, function( data )
-                {
-                    var walker = function(i, node) {
-                        if ( node.type == "layer")
-                        {
-                            // Node title map to id if requires id
-                            var overlay = L.WMS.overlay("/project/{{ project.id }}/?", {
-                                'layers': node.title,
-                                'transparent': true,
-                                'format': 'image/png',
-                            }).addTo(map);
-                            layers[node.title] = overlay;
-                        }
-                    };
-                    $.each(data.nodes, walker);
+                    var toc_url = "/project/{{ project.id }}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS={{ project.wms_root_name }}&FORMAT=application/json";
+                    $.getJSON(toc_url, function( data )
+                    {
+                        var walker = function(i, node) {
+                            if ( node.type == "layer")
+                            {
+                                // Node title map to id if requires id
+                                var overlay = L.WMS.tileLayer("/project/{{ project.id }}/?", {
+                                    'layers': wms_layers_map[node.title],
+                                    'tileSize': 512,
+                                    'transparent': true,
+                                    'format': 'image/png',
+                                }).addTo(map);
+                                node.layer = overlay;
+                            }
+                        };
+                        wms_toc_tree = data.nodes;
+                        $.each(wms_toc_tree, walker);
+
+                        // Create the TOC HTML
+
+                    });
                 });
 
             </script>
-        </div>
+        </div><!-- // #map -->
 
-    </div>
+        <pre class="jref">
+            {{ json_dump() }}
+        </pre>
+
+
+    </div><!-- // .wrapper -->
 
 
     <!-- Optional JavaScript -->
@@ -93,11 +191,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <!-- Make sure you put this AFTER Leaflet's CSS -->
-     <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
        integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
-       crossorigin=""></script>
+       crossorigin="">
+    </script>
+    <script src="/static/js/leaflet.wms.js"></script>
     <script>
-      jQuery('.jref').jsonFormatter();
+        $('.jref').jsonFormatter();
+
+        $(function(){
+            $('#sidebarCollapse').on('click', function () {
+                $("#sidebar").animate({
+                    width: "toggle"
+                }, 350, function() {
+                    map.invalidateSize();
+                    $('#sidebar').toggleClass('active');
+                });
+
+            });
+        });
+
     </script>
   </body>
 </html>
