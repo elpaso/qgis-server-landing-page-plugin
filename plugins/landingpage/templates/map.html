@@ -45,7 +45,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-            <a class="nav-link" href="../">Home<span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="../../">Home<span class="sr-only">(current)</span></a>
             </li>
             <!--
             <li class="nav-item">
@@ -79,7 +79,7 @@
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
-                <h5>Table of contents</h5>
+                <h5>Legend</h5>
             </div>
 
             <div id="toc"></div>
@@ -115,24 +115,55 @@
                     map.fitBounds([p1, p2, p3, p4]);
 
                     var node_counter = 0;
+                    var wms_source = L.WMS.source("/project/{{ project.id }}/?", {
+                        'tileSize': 512,
+                        'transparent': true,
+                        'format': 'image/png',
+                        'dpi': window.devicePixelRatio * 96,
+                    }).addTo(map);
+
+                    var set_layer_visibility = function(e, visible)
+                    {
+                        if ( !visible)
+                        {
+                            $(e).removeClass('visible');
+                            if ($(e).attr('typename'))
+                                wms_source.removeSubLayer($(e).attr('typename'));
+                            $(e).removeClass('fa-check-square-o');
+                            $(e).addClass('fa-square-o');
+                        }
+                        else
+                        {
+                            $(e).addClass('visible');
+                            if ($(e).attr('typename'))
+                                wms_source.addSubLayer($(e).attr('typename'));
+                            $(e).addClass('fa-check-square-o');
+                            $(e).removeClass('fa-square-o');
+                        }
+                        $(e).parent().find('ul .node-check').each(function(i, e){
+                            set_layer_visibility(e, visible);
+                        });
+                    };
 
                     var layer_factory = function(toc_node, parent_selector, depth)
                     {
-                        console.log("-".repeat(depth) + " ... ENTERING " + toc_node.title + " on parent " +  parent_selector);
+                        //console.console.log("-".repeat(depth) + " ... ENTERING " + toc_node.title + " on parent " +  parent_selector);
                         if (toc_node.is_layer)
                         {
-                            var overlay = L.WMS.tileLayer("/project/{{ project.id }}/?", {
-                                'layers': toc_node.typename,
-                                'tileSize': 512,
-                                'transparent': true,
-                                'format': 'image/png',
-                                'dpi': window.devicePixelRatio * 96,
-                            }).addTo(map);
-                            toc_node.layer = overlay;
+                            console.log("Adding " + toc_node.typename);
                             // Make a layer node
-                            $(parent_selector).append('<li class="layer"><i class="fa fa-' + (toc_node.visible ? 'check-' : '') +'square-o"></i> ' + toc_node.title + '</li>');
+                            $(parent_selector).prepend('<li id="layer-node-' + node_counter + '" class="layer"><i data-toggle="tooltip" title="Toggle layer visibility" class="node-check fa ' + (toc_node.visible ? 'fa-check-square-o visible' : 'fa-square-o') + '"></i> ' + toc_node.title + '</li>');
+                            $('#layer-node-' + node_counter + '> i').attr('typename', toc_node.typename);
+
+                            if (toc_node.visible)
+                                wms_source.addSubLayer(toc_node.typename);
+
+                            $('#layer-node-' + node_counter + ' > .node-check').on('click', function(e){
+                                var is_visible = $(e.target).hasClass('visible');
+                                set_layer_visibility(e.target, ! is_visible);
+                            });
                             node_counter++;
-                            console.log("-".repeat(depth) + " creating layer "+ toc_node.title + " to " +  parent_selector);
+                            //console.log("-".repeat(depth) + " creating layer "+ toc_node.title + " to " +  parent_selector);
                         }
                         else
                         {
@@ -143,27 +174,38 @@
                                     // Make a group node if not root
                                     if (toc_node.name == 'root')
                                     {
-                                        $(parent_selector).append('<ul class="list-unstyled" id="root-node"></ul>');
+                                        $(parent_selector).prepend('<ul class="list-unstyled" id="root-node"></ul>');
                                         child_selector = '#root-node';
                                         node_counter++;
-                                        console.log("-".repeat(depth) + " creating ROOT group " + child_selector + " " + toc_node.title + " to parent " + parent_selector);
+                                        //console.log("-".repeat(depth) + " creating ROOT group " + child_selector + " " + toc_node.title + " to parent " + parent_selector);
                                         $(toc_node.children.reverse()).each(function(i, c)
                                         {
-                                            console.log("-".repeat(depth) + " ... adding child " + c.title + " to group " +  child_selector);
+                                            //console.log("-".repeat(depth) + " ... adding child " + c.title + " to group " +  child_selector);
                                             layer_factory(c, "#root-node", depth+1);
                                         });
                                     }
                                     else
                                     {
-                                        $(parent_selector).append('<li class="layer-group"><i data-toggle="collapse" aria-expanded="' + (toc_node.expanded ? 'true' : 'false') + '"  href="#node-' + node_counter + '" class="fa fa-caret-' + (toc_node.expanded ? 'down' : 'right') +'"></i> <i class="fa fa-' + (toc_node.visible ? 'check-' : '') +'square-o"></i> <a data-toggle="collapse" aria-expanded="' + (toc_node.expanded ? 'true' : 'false') + '" href="#node-' + node_counter + '">' + toc_node.title + '</a><ul class="collapse' + (toc_node.expanded ? ' show' : '') +' list-unstyled" id="node-' + node_counter +'"></ul></li>');
+                                        $(parent_selector).prepend('<li class="layer-group"><i data-toggle="collapse" aria-expanded="' + (toc_node.expanded ? 'true' : 'false') + '"  href="#node-' + node_counter + '" class="group-toggle fa fa-caret-' + (toc_node.expanded ? 'down' : 'right') +'"></i> <i data-toggle="tooltip" title="Toggle group visibility" id="group-node-' + node_counter + '" class="node-check fa ' + (toc_node.visible ? 'fa-check-square-o visible' : 'fa-square-o') + '"></i> <a data-toggle="collapse" aria-expanded="' + (toc_node.expanded ? 'true' : 'false') + '" href="#node-' + node_counter + '">' + toc_node.title + '</a><ul class="collapse' + (toc_node.expanded ? ' show' : '') +' list-unstyled" id="node-' + node_counter +'"></ul></li>');
                                         child_selector = '#node-' + node_counter;
-                                        node_counter++;
-                                        console.log("-".repeat(depth) + " creating group " + child_selector + " " + toc_node.title + " to parent " + parent_selector);
-                                        $(toc_node.children.reverse()).each(function(i, c)
-                                        {
-                                            console.log("-".repeat(depth) + " ... adding child " + c.title + " to group " +  child_selector);
-                                            layer_factory(c, child_selector, depth+1);
+
+                                        $('#group-node-' + node_counter).on('click', function(e){
+                                            var is_visible = $(e.target).hasClass('visible');
+                                            set_layer_visibility(e.target, ! is_visible);
                                         });
+
+                                        node_counter++;
+                                        (function(cs)
+                                        {
+                                            $(toc_node.children.reverse()).each(function(i, c)
+                                            {
+                                                //console.log("-".repeat(depth) + " ... adding child " + c.title + " to group " +  cs);
+                                                layer_factory(c, cs, depth+1);
+                                            });
+                                        })(child_selector);
+
+                                        //console.log("-".repeat(depth) + " creating group " + child_selector + " " + toc_node.title + " to parent " + parent_selector);
+
                                     }
 
                                 }
@@ -173,7 +215,7 @@
                                 console.log(error);
                             }
                         }
-                        console.log("-".repeat(depth) + " ... LEAVING " + toc_node.title + " on parent " +  parent_selector);
+                        //console.log("-".repeat(depth) + " ... LEAVING " + toc_node.title + " on parent " +  parent_selector);
                     };
 
                     // Load all layers
@@ -218,19 +260,23 @@
         $('.jref').jsonFormatter();
 
         $(function(){
-            $('#sidebarCollapse').on('click', function () {
+            $('#sidebarCollapse').on('click', function (e) {
                 $("#sidebar").animate({
                     width: "toggle"
                 }, 350, function() {
                     map.invalidateSize();
                     $('#sidebar').toggleClass('active');
                 });
-
+                e.preventDefault();
+                return false;
             });
             // Move it where it belongs
             $('.leaflet-control-container').append($('#sidebarCollapse'));
         });
 
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
     </script>
   </body>
 </html>

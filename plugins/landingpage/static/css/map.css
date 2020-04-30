@@ -20,6 +20,7 @@ html, body {
 
 /* Sidebar */
 
+/*
 @media (max-width: 768px) {
     #sidebar {
         margin-left: -250px;
@@ -28,6 +29,7 @@ html, body {
         margin-left: 0;
     }
 }
+*/
 
 #sidebar {
     min-width: 250px;
@@ -48,7 +50,7 @@ html, body {
 */
 
 #sidebar .sidebar-header {
-    padding: 20px;
+    padding: 12px 0px 0px 12px;
 }
 
 /* down */
@@ -94,4 +96,13 @@ html, body {
 
 #sidebar .list-unstyled {
     padding-left: 4px;
+}
+
+#sidebar .group-toggle {
+    width: 10px;
+    cursor: pointer;
+}
+
+#sidebar .node-check {
+    cursor: pointer;
 }
