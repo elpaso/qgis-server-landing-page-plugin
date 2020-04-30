@@ -54,8 +54,8 @@ class TestLandingPage(TestCase):
         path = sorted(projects().values())[1]
         info = project_info(path)
         self.assertEqual(info['title'], 'Project2 Title')
-        self.assertEqual(info['toc'][0]['name'], 'points_3857')
-        self.assertEqual(len(info['toc']), 1)
+        self.assertEqual(info['toc']['children'][0]['name'], 'points_3857')
+        self.assertEqual(len(info['toc']['children']), 1)
 
     def test_layer_info(self):
         p = QgsProject()
@@ -96,9 +96,15 @@ class TestLandingPage(TestCase):
         p = QgsProject()
         p.read(os.path.join(os.path.dirname(__file__), 'projects', 'test_project_wms_grouped_nested_layers.qgs'))
         toc = get_toc(p)
-        print(toc)
-
-
+        self.assertTrue('osm' in [l['title'] for l in toc['children']])
+        osm = toc['children'][-1]
+        self.assertEqual(osm['layer_type'], 'raster')
+        self.assertEqual(osm['tree_id'], 'root.osm')
+        boundaries = toc['children'][0]
+        cdb_lines = boundaries['children'][0]
+        self.assertTrue(cdb_lines['typename'], 'CDB_Lines_Server_Short_Name')
+        self.assertTrue(cdb_lines['title'], 'CDB Lines Server Title')
+        self.assertTrue(cdb_lines['name'], 'CDB Lines')
 
 if __name__ == '__main__':
     unittest.main()

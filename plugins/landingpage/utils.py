@@ -57,38 +57,13 @@ def get_toc(project):
     """Get the WMS TOC information for the project"""
 
     use_ids = QgsServerProjectUtils.wmsUseLayerIds(project)
+    wmsRestrictedLayers = QgsServerProjectUtils.wmsRestrictedLayers(project)
 
-    # Legend symbols
-    model = QgsLegendModel(project.layerTreeRoot())
-    ctx = QgsRenderContext()
-    settings = QgsLegendSettings()
-    renderer = QgsLegendRenderer(model, settings)
-    nodes = renderer.exportLegendToJson(ctx)['nodes'].toVariant()
-
-    # Flatten
-    flat_nodes = {}
-
-    def _walker(node, name, flat_nodes):
-        name = name + '.' + node['title']
-        flat_nodes[name] = node
-
-        try:
-            for n in node['nodes']:
-                _walker(n, name, flat_nodes)
-        except KeyError:
-            pass
-
-        try:
-           del flat_nodes[name]['nodes']
-        except KeyError:
-            pass
-
-    [_walker(n, 'root', flat_nodes) for n in nodes]
-
-    def _harvest(node, parent_id):
+    def _harvest(node, parent_id=None):
+        node_name = node.name() if parent_id is not None else 'root'
         rec = {
-            'title': node.name(),  # Override with title for layers
-            'name': node.name(),
+            'title': node_name,  # Override with title for layers
+            'name': node_name,
             'expanded': node.isExpanded(),
             'visible': node.isVisible(),
         }
@@ -110,15 +85,11 @@ def get_toc(project):
         except AttributeError:
             rec['is_layer'] = False
 
-        rec['tree_id'] = parent_id + '.' + rec['title']
-
-        try:
-            rec.update(flat_nodes[rec['tree_id']])
-        except:
-            pass
+        rec['tree_id'] = ( parent_id + '.' + rec['title'] ) if parent_id is not None else 'root'
+        rec['tree_id_hash'] = hashlib.md5(rec['tree_id'].encode('utf8')).hexdigest()
 
         children = []
-        for cn in [n for n in node.children() if n.name() not in QgsServerProjectUtils.wmsRestrictedLayers(project)]:
+        for cn in [n for n in node.children() if n.name() not in wmsRestrictedLayers]:
             try:
                 children.append(_harvest(cn, rec['tree_id']))
             except:
@@ -127,7 +98,7 @@ def get_toc(project):
         rec['children'] = children
         return rec
 
-    return [_harvest(c , 'root') for c in project.layerTreeRoot().children()]
+    return _harvest(project.layerTreeRoot())
 
 def project_wms(project, crs):
     """Calculate the extent from WMS advertized (if defined) or from

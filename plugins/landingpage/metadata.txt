@@ -13,3 +13,5 @@ about=Adds a landing page to the server root path with
   optional project listing from a specified directory.
   The absolute path to the projects directory can be set
   with the environment variable QGIS_SERVER_PROJECTS_DIRECTORY.
+  QGIS_SERVER_LANDINGPAGE_DEBUG can be set to show JSON data
+  passed to the plugin templates.

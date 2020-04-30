@@ -71,7 +71,8 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
 
         self.write({
                 'links': [],
-                'projects': projects_data
+                'projects': projects_data,
+                'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
             },
             context,
             html_metadata)
@@ -125,7 +126,8 @@ class MapApiHandler(QgsServerOgcApiHandler):
 
         self.write({
                 'links': [],
-                'project': project_data
+                'project': project_data,
+                'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
             },
             context,
             html_metadata)

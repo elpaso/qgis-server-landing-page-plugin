@@ -51,9 +51,20 @@ html, body {
     padding: 20px;
 }
 
+/* down */
+#sidebar i.fa.fa-caret-right[aria-expanded="true"]::before
+{
+    content: "\f0d7";
+}
+
+/* right */
+#sidebar i.fa.fa-caret-down[aria-expanded="false"]::before
+{
+    content: "\f0da";
+}
+
 #sidebar a[data-toggle="collapse"] {
     position: relative;
-    display: block;
 }
 
 #sidebar .dropdown-toggle::after {
@@ -64,20 +75,23 @@ html, body {
     transform: translateY(-50%);
 }
 
-#sidebar ul li a {
-    padding: 10px;
-    font-size: 1.1em;
+#sidebar ul li {
+    padding: 10px 10px 0 10px;
     display: block;
 }
 
-#sidebar ul ul a {
-    font-size: 0.9em !important;
-    padding-left: 30px !important;
+#sidebar ul li.layer {
+    padding: 5px 10px;
+    display: block;
 }
 
 #sidebarCollapse {
     display: block;
-    position: absolute;
-    top: 67px;
-    right: 18px;
+    position: relative;
+    top: 84px;
+    left: 3px;
+}
+
+#sidebar .list-unstyled {
+    padding-left: 4px;
 }

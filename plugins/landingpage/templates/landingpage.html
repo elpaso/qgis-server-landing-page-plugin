@@ -141,11 +141,11 @@
         {% endfor %}
     {% endif %}
 
-
+    {% if debug %}
     <pre class="jref">
         {{ json_dump() }}
     </pre>
-
+    {% endif %}
 
     <script type="text/javascript">
         var toTitleCase = function (str) {
