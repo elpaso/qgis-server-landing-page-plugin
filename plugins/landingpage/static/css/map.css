@@ -106,3 +106,8 @@ html, body {
 #sidebar .node-check {
     cursor: pointer;
 }
+
+.symbol {
+    padding-left: 6px;
+    height: 12px;
+}

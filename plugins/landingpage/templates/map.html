@@ -45,32 +45,9 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-            <a class="nav-link" href="../../">Home<span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="../../">Projects<span class="sr-only">(current)</span></a>
             </li>
-            <!--
-            <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-            </li>
-            <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Dropdown
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="#">Action</a>
-                <a class="dropdown-item" href="#">Another action</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Something else here</a>
-            </div>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link disabled" href="#">Disabled</a>
-            </li>
-        </ul>
-        <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-        </form>
-        -->
+
         </div>
     </nav><!-- // navbar -->
 
@@ -147,23 +124,21 @@
 
                     var layer_factory = function(toc_node, parent_selector, depth)
                     {
-                        //console.console.log("-".repeat(depth) + " ... ENTERING " + toc_node.title + " on parent " +  parent_selector);
                         if (toc_node.is_layer)
                         {
                             console.log("Adding " + toc_node.typename);
                             // Make a layer node
-                            $(parent_selector).prepend('<li id="layer-node-' + node_counter + '" class="layer"><i data-toggle="tooltip" title="Toggle layer visibility" class="node-check fa ' + (toc_node.visible ? 'fa-check-square-o visible' : 'fa-square-o') + '"></i> ' + toc_node.title + '</li>');
-                            $('#layer-node-' + node_counter + '> i').attr('typename', toc_node.typename);
+                            $(parent_selector).prepend('<li id="' + toc_node.tree_id_hash + '" class="layer"><i data-toggle="tooltip" title="Toggle layer visibility" class="node-check fa ' + (toc_node.visible ? 'fa-check-square-o visible' : 'fa-square-o') + '"></i> ' + toc_node.title + '</li>');
+                            $('#' + toc_node.tree_id_hash + '> i').attr('typename', toc_node.typename);
 
                             if (toc_node.visible)
                                 wms_source.addSubLayer(toc_node.typename);
 
-                            $('#layer-node-' + node_counter + ' > .node-check').on('click', function(e){
+                            $('#' + toc_node.tree_id_hash + ' > .node-check').on('click', function(e){
                                 var is_visible = $(e.target).hasClass('visible');
                                 set_layer_visibility(e.target, ! is_visible);
                             });
                             node_counter++;
-                            //console.log("-".repeat(depth) + " creating layer "+ toc_node.title + " to " +  parent_selector);
                         }
                         else
                         {
@@ -199,12 +174,9 @@
                                         {
                                             $(toc_node.children.reverse()).each(function(i, c)
                                             {
-                                                //console.log("-".repeat(depth) + " ... adding child " + c.title + " to group " +  cs);
                                                 layer_factory(c, cs, depth+1);
                                             });
                                         })(child_selector);
-
-                                        //console.log("-".repeat(depth) + " creating group " + child_selector + " " + toc_node.title + " to parent " + parent_selector);
 
                                     }
 
@@ -215,21 +187,57 @@
                                 console.log(error);
                             }
                         }
-                        //console.log("-".repeat(depth) + " ... LEAVING " + toc_node.title + " on parent " +  parent_selector);
                     };
 
                     // Load all layers
                     layer_factory(wms_toc_tree, '#toc', 0);
+
+                    var find_by_title = function(title, element)
+                    {
+                        console.log(element.title);
+                        try {
+                            if (element.title == title)
+                            {
+                                return element;
+                            }
+                            for(var i=0; i<element.children.length; ++i)
+                            {
+                                var result = find_by_title(title, element.children[i]);
+                                if (result)
+                                {
+                                    return result;
+                                }
+                            }
+                        } catch (error) {
+                            console.log('Error'); // Ignore
+                        }
+                        return false;
+                    }
 
                     var toc_url = "/project/{{ project.id }}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS={{ project.wms_root_name }}&FORMAT=application/json";
                     $.getJSON(toc_url, function( data )
                     {
                         var walker = function(i, node)
                         {
-                            //console.log(node);
+                            var e = find_by_title(node.title, wms_toc_tree);
+                            if (e)
+                            {
+                                if (typeof(node.symbols) != "undefined")
+                                {
+                                    $('#' + e.tree_id_hash).append('<ul class="symbols list-unstyled"></ul>');
+                                    for(var i=0; i<node.symbols.length; ++i)
+                                    {
+                                        var symbol = node.symbols[i];
+                                        $('#' + e.tree_id_hash+ ' ul').append('<li><img class="symbol" src="data:image/png;base64,' + symbol.icon + '" /> ' + symbol.title + '</li>')
+                                    }
+                                }
+                                else
+                                {
+                                   $('#' + e.tree_id_hash + ' i.fa').append('<img class="symbol" src="data:image/png;base64,' + node.icon + '" /> ');
+                                }
+                            }
                         };
                         $.each(data.nodes, walker);
-
                     });
                 });
 
