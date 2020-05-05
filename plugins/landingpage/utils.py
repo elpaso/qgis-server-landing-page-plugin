@@ -30,25 +30,42 @@ from qgis.core import (
     QgsRenderContext,
     QgsLegendModel,
     QgsLegendSettings,
+    QgsProviderRegistry,
+    QgsApplication,
+    QgsDataSourceUri,
 )
 
 def projects():
     """Returns a list of available projects from various sources:
 
-    - QGIS_SERVER_PROJECTS_DIRECTORY directory
-    - QGIS_SERVER_PROJECTS_CONNECTION DB connection
+    - QGIS_SERVER_PROJECTS_DIRECTORIES directories
+    - QGIS_SERVER_PROJECTS_PG_CONNECTIONS postgres connections
 
     :return: hash of project paths (or other storage identifiers) with a digest key
     :rtype: dict
     """
     projects = {}
-    if not os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY', False):
-        return projects
 
-    for f in os.listdir(os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY')):
-        if f.upper().endswith('.QGS') or f.upper().endswith('.QGZ'):
-            project_key = hashlib.md5(f.encode('utf8')).hexdigest()
-            projects[project_key] = os.path.join(os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORY'), f)
+    if os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORIES', False):
+        for directory in os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORIES').split('||'):
+            for f in os.listdir(directory):
+                if f.upper().endswith('.QGS') or f.upper().endswith('.QGZ'):
+                    project_key = hashlib.md5(f.encode('utf8')).hexdigest()
+                    projects[project_key] = os.path.join(directory, f)
+
+    if os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS', False):
+        md = QgsProviderRegistry.instance().providerMetadata('postgres')
+        for pg_connection in os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS').split('||'):
+            conn = md.createConnection(pg_connection, {})
+            # List projects
+            app = QgsApplication.instance()
+            reg = app.projectStorageRegistry()
+            assert reg.projectStorages() != []
+            storage = reg.projectStorageFromType('postgresql')
+            uri = QgsDataSourceUri(pg_connection)
+            for project in storage.listProjects(pg_connection):
+                project_key = hashlib.md5((project + pg_connection).encode('utf8')).hexdigest()
+                projects[project_key] = pg_connection + "&project=" + project
 
     return projects
 
@@ -245,6 +262,8 @@ def project_info(project_path):
             info['title'] = QgsServerProjectUtils.owsServiceTitle(p)
         if not info['title']:
             info['title'] = p.title()
+        if not info['title']:
+            info['title'] = p.baseName()
 
         info['description'] = p.metadata().abstract()
         if not info['description']:

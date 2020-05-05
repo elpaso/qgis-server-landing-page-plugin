@@ -36,6 +36,7 @@ html, body {
     max-width: 250px;
     min-height: 100vh;
     transition: all 0.3s;
+    overflow-y: auto;
 }
 
 

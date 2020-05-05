@@ -6,6 +6,12 @@
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
+    Note: QGIS_SERVER_LANDING_PAGE_PG_TEST defines a PG connection to be used for
+          testing projects stored in the database. For example (default value):
+          "host=localhost port=5432"
+          The test database name is landing_page_test, it will be dropped and recreated
+          on each test run.
+
 """
 
 __author__ = 'elpaso@itopen.it'
@@ -17,7 +23,7 @@ import re
 import hashlib
 from qgis.core import QgsApplication, QgsProject
 from qgis.server import QgsServer, QgsBufferServerRequest, QgsBufferServerResponse
-from qgis.testing import TestCase, unittest
+from qgis.testing import TestCase, unittest, start_app
 from landingpage.landingpage import LandingPageApiLoader
 from landingpage.utils import (
     projects,
@@ -30,20 +36,21 @@ from landingpage.utils import (
 from qgis.server import (
     QgsServerProjectUtils,
 )
+from qgis.core import QgsProviderRegistry, QgsDataSourceUri
 
-os.environ['QGIS_SERVER_PROJECTS_DIRECTORY'] = os.path.join(os.path.dirname(__file__), 'projects')
+start_app()
 
-class TestLandingPage(TestCase):
+class TestLandingPageFileSystemLoader(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.app = QgsApplication([], False)
+        os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(__file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
 
     @classmethod
     def tearDownClass(cls):
-        cls.app.exitQgis()
+        pass
 
     def test_projects(self):
         _projects = '|'.join(projects())
@@ -68,22 +75,24 @@ class TestLandingPage(TestCase):
 
     def test_project_wms(self):
         p0 = QgsProject()
-        p0.read(list(projects().values())[0])
+        p0.read(sorted(list(projects().values()))[0])
         p1 = QgsProject()
-        p1.read(list(projects().values())[1])
+        p1.read(sorted(list(projects().values()))[1])
 
-        # p0 is restricted and does use layer ids
+        # Check that project3 from second directory is in the list
+        self.assertTrue('projects2/project3.qgz' in '||'.join(list(projects().values())))
+
+        # p0 is not restricted and does not use layer ids
         extent, layers = project_wms(p0, 'EPSG:4326')
-        self.assertEqual(layers, ['points_3857_6c1395a0_1065_41f7_9cf4_8109e268ac84'])
-        # Extent is from the only published layer
-        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon()), 'POLYGON((-25.49 41.98, 38.23 41.98, 38.23 55.95, -25.49 55.95, -25.49 41.98))')
-
-        # p1 is not restricted and does not use layer ids
-        extent, layers = project_wms(p1, 'EPSG:4326')
         self.assertEqual(layers, ['points'])
         # Extent is WMS advertized
         self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon()), 'POLYGON((-1.12 43.23, 11.12 43.23, 11.12 52.26, -1.12 52.26, -1.12 43.23))')
 
+        # p1 is restricted and does use layer ids
+        extent, layers = project_wms(p1, 'EPSG:4326')
+        self.assertEqual(layers, ['points_3857_6c1395a0_1065_41f7_9cf4_8109e268ac84'])
+        # Extent is from the only published layer
+        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon()), 'POLYGON((-25.49 41.98, 38.23 41.98, 38.23 55.95, -25.49 55.95, -25.49 41.98))')
 
     def test_landing_page(self):
         request = QgsBufferServerRequest('/')
@@ -105,6 +114,52 @@ class TestLandingPage(TestCase):
         self.assertTrue(cdb_lines['typename'], 'CDB_Lines_Server_Short_Name')
         self.assertTrue(cdb_lines['title'], 'CDB Lines Server Title')
         self.assertTrue(cdb_lines['name'], 'CDB Lines')
+
+
+
+class TestLandingPagePostgresLoader(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Make sure there are no other loaders
+        del os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES']
+        cls.pg_conn = os.environ.get('QGIS_SERVER_LANDING_PAGE_PG_TEST', False)
+        if not cls.pg_conn:  # default
+            cls.pg_conn = "host=localhost port=5432 schema=public"
+
+        # Use QGIS API to create the test data
+        md = QgsProviderRegistry.instance().providerMetadata('postgres')
+        conn = md.createConnection(cls.pg_conn, {})
+        conn.executeSql('DROP DATABASE landing_page_test')
+        conn.executeSql('CREATE DATABASE landing_page_test')
+
+        # Add DB to conn string
+        cls.pg_conn = "dbname=landing_page_test " + cls.pg_conn
+        conn = md.createConnection(cls.pg_conn, {})
+        conn.executeSql(open(os.path.join(os.path.dirname(__file__), 'landing_page_test.sql'), 'rt').read())
+
+        uri = QgsDataSourceUri(cls.pg_conn)
+        cls.pg_storage_conn = "postgresql://{host}:{port}?sslmode=disable&dbname=landing_page_test&schema=public".format(host=uri.host(), port=uri.port())
+        os.environ['QGIS_SERVER_PROJECTS_PG_CONNECTIONS'] = cls.pg_storage_conn
+        cls.server = QgsServer()
+        cls.api = LandingPageApiLoader(cls.server.serverInterface())
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def test_projects(self):
+        _projects = '|'.join(projects().values())
+        self.assertTrue('PGProject1' in _projects)
+        self.assertTrue('PGProject2' in _projects)
+
+    def test_project_wms(self):
+        p0 = QgsProject()
+        p0.read(sorted(list(projects().values()))[0])
+        p1 = QgsProject()
+        p1.read(sorted(list(projects().values()))[1])
+        self.assertEqual(sorted([l.name() for l in p0.mapLayers().values()]), ['italy', 'spain', 'world'])
+
 
 if __name__ == '__main__':
     unittest.main()

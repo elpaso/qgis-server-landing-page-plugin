@@ -13,7 +13,8 @@ services:
       - QGIS_SERVER_IGNORE_BAD_LAYERS=1
       - QGIS_SERVER_API_RESOURCES_DIRECTORY=${QGIS_SERVER_API_RESOURCES_DIRECTORY}
       # Landing page plugin projects directory
-      - QGIS_SERVER_PROJECTS_DIRECTORY=${QGIS_SERVER_PROJECTS_DIRECTORY}
+      - QGIS_SERVER_PROJECTS_DIRECTORIES=${QGIS_SERVER_PROJECTS_DIRECTORIES}
+      - QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://postgis:5432?user=${POSTGRES_USER}&password=${POSTGRES_PASS}&sslmode=disable&dbname=${POSTGRES_DBNAME}&schema=public
     command: >
         bash -c "/usr/bin/xvfb-run -a /usr/bin/qgis_mapserver -l ${QGIS_SERVER_LOG_LEVEL} ${PUBLIC_HOSTNAME}:${PUBLIC_PORT}"
     logging:

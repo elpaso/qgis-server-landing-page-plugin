@@ -16,6 +16,9 @@ PLUGINS_VOLUME=/home/dev/Dockers/qgis-server-standalone-docker/plugins
 PUBLIC_PORT=8002
 # Can be overridden, default to /usr/share/qgis/resources/server/api/
 QGIS_SERVER_API_RESOURCES_DIRECTORY=/usr/share/qgis/resources/server/api/
-# Landing page plugin (container path)
-QGIS_SERVER_PROJECTS_DIRECTORY=/plugins/landingpage/tests/projects
+# Landing page plugin (container paths, separated by || if more than one)
+QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
 ```
+
+
+`QGIS_SERVER_LANDINGPAGE_DEBUG` when activated will print all json information inside the templates.
