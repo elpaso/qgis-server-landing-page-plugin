@@ -30,6 +30,7 @@ from qgis.server import (
 
 from .utils import project_info, projects
 
+
 class LandingPageApiHandler(QgsServerOgcApiHandler):
     """Project listing handler"""
 
@@ -69,11 +70,13 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
             data['id'] = project_id
             projects_data.append(data)
 
+        context.response().setHeader('Access-Control-Allow-Origin', '*')
+
         self.write({
-                'links': [],
-                'projects': projects_data,
-                'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
-            },
+            'links': [],
+            'projects': projects_data,
+            'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
+        },
             context,
             html_metadata)
 
@@ -116,19 +119,20 @@ class MapApiHandler(QgsServerOgcApiHandler):
 
         html_metadata = {
             "pageTitle": "QGIS Server Project Map",
-            "navigation": [] # TODO
+            "navigation": []  # TODO
         }
 
-        project_identifier = self.project_id_re.findall(context.request().url().toString())[0]
+        project_identifier = self.project_id_re.findall(
+            context.request().url().toString())[0]
         # TODO: cache this thing!
         project_data = project_info(projects()[project_identifier])
         project_data['id'] = project_identifier
 
         self.write({
-                'links': [],
-                'project': project_data,
-                'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
-            },
+            'links': [],
+            'project': project_data,
+            'debug': os.environ.get('QGIS_SERVER_LANDINGPAGE_DEBUG', False),
+        },
             context,
             html_metadata)
 
@@ -167,7 +171,8 @@ class StaticApiHandler(QgsServerOgcApiHandler):
     def handleRequest(self, context):
         """Serve static files from 'static' directory"""
 
-        path = os.path.join(os.path.dirname(__file__), context.request().url().path()[1:])
+        path = os.path.join(os.path.dirname(__file__),
+                            context.request().url().path()[1:])
         if not os.path.exists(path):
             raise Exception('Not found!')
 
@@ -175,11 +180,10 @@ class StaticApiHandler(QgsServerOgcApiHandler):
             content = f.read()
             size = len(content)
 
-        mimeType = QMimeDatabase().mimeTypeForFile( path )
+        mimeType = QMimeDatabase().mimeTypeForFile(path)
         context.response().setHeader("Content-Type", mimeType.name())
         context.response().setHeader("Content-Length", str(size))
         context.response().write(content)
 
     def parameters(self, context):
         return []
-

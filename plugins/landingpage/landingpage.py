@@ -45,7 +45,8 @@ class LandingPageApi(QgsServerOgcApi):
             url.path() == '/' or
             url.path() == '' or
             url.path().startswith('/static/') or
-            url.path().startswith('/map/')
+            url.path().startswith('/map/') or
+            url.path().startswith('/index')
         )
 
 
