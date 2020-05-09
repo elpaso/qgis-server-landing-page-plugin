@@ -128,6 +128,8 @@ class MapApiHandler(QgsServerOgcApiHandler):
         project_data = project_info(projects()[project_identifier])
         project_data['id'] = project_identifier
 
+        context.response().setHeader('Access-Control-Allow-Origin', '*')
+
         self.write({
             'links': [],
             'project': project_data,

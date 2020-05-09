@@ -1,5 +1,5 @@
 <template>
-  <div id="catalog" class="container">
+  <div id="catalog" class="container mt-4">
     <!-- TODO: empty -->
     <div class="mb-4" :key="project.identifier" v-for="project in projects">
       <b-card no-body header-tag="h2" :header="project.title">
@@ -15,7 +15,7 @@
           <b-button
             variant="primary"
             role="button"
-            :href="qgisUrl('/project/' + project.id + '/map/' + project.id)"
+            :to="{ name: 'map', params: { projectId: project.id }}"
           >Map</b-button>
           <b-button
             variant="link"
@@ -47,7 +47,7 @@ import { LMap, LTileLayer } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 import WMS from "../../node_modules/leaflet-wms/leaflet.wms.js";
-import Metadata from "./Metadata.vue";
+import Metadata from "@/components/Metadata.vue";
 
 export default {
   name: "Catalog",
