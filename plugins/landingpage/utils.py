@@ -35,6 +35,7 @@ from qgis.core import (
     QgsDataSourceUri,
 )
 
+
 def projects():
     """Returns a list of available projects from various sources:
 
@@ -56,7 +57,6 @@ def projects():
     if os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS', False):
         md = QgsProviderRegistry.instance().providerMetadata('postgres')
         for pg_connection in os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS').split('||'):
-            conn = md.createConnection(pg_connection, {})
             # List projects
             app = QgsApplication.instance()
             reg = app.projectStorageRegistry()
@@ -64,7 +64,8 @@ def projects():
             storage = reg.projectStorageFromType('postgresql')
             uri = QgsDataSourceUri(pg_connection)
             for project in storage.listProjects(pg_connection):
-                project_key = hashlib.md5((project + pg_connection).encode('utf8')).hexdigest()
+                project_key = hashlib.md5(
+                    (project + pg_connection).encode('utf8')).hexdigest()
                 projects[project_key] = pg_connection + "&project=" + project
 
     return projects
@@ -86,15 +87,18 @@ def get_toc(project):
         }
         try:
             rec['id'] = node.layerId()
-            short_name = node.layer().shortName() if node.layer().shortName() else node.layer().name()
+            short_name = node.layer().shortName() if node.layer(
+            ).shortName() else node.layer().name()
             rec['typename'] = node.layer().id() if use_ids else short_name
             # Override title
             if node.layer().title():
                 rec['title'] = node.layer().title()
             if node.layer().type() not in (QgsMapLayerType.VectorLayer, QgsMapLayerType.RasterLayer):
                 raise Exception
-            rec['layer_type'] = 'vector' if node.layer().type() == QgsMapLayerType.VectorLayer else 'raster'
-            rec['has_scale_based_visibility'] = node.layer().hasScaleBasedVisibility()
+            rec['layer_type'] = 'vector' if node.layer().type(
+            ) == QgsMapLayerType.VectorLayer else 'raster'
+            rec['has_scale_based_visibility'] = node.layer(
+            ).hasScaleBasedVisibility()
             if rec['has_scale_based_visibility']:
                 rec['min_scale'] = node.layer().minimumScale()
                 rec['max_scale'] = node.layer().maximumScale()
@@ -102,8 +106,10 @@ def get_toc(project):
         except AttributeError:
             rec['is_layer'] = False
 
-        rec['tree_id'] = ( parent_id + '.' + rec['title'] ) if parent_id is not None else 'root'
-        rec['tree_id_hash'] = hashlib.md5(rec['tree_id'].encode('utf8')).hexdigest()
+        rec['tree_id'] = (parent_id + '.' + rec['title']
+                          ) if parent_id is not None else 'root'
+        rec['tree_id_hash'] = hashlib.md5(
+            rec['tree_id'].encode('utf8')).hexdigest()
 
         children = []
         for cn in [n for n in node.children() if n.name() not in wmsRestrictedLayers]:
@@ -116,6 +122,7 @@ def get_toc(project):
         return rec
 
     return _harvest(project.layerTreeRoot())
+
 
 def project_wms(project, crs):
     """Calculate the extent from WMS advertized (if defined) or from
@@ -140,18 +147,25 @@ def project_wms(project, crs):
 
     extent = QgsServerProjectUtils.wmsExtent(project)
     if extent.isNull():
-        target_crs = QgsCoordinateReferenceSystem.fromEpsgId(int(crs.split(':')[1]))
+        target_crs = QgsCoordinateReferenceSystem.fromEpsgId(
+            int(crs.split(':')[1]))
         for l in project.mapLayers().values():
             if l.name() not in restricted_wms:
                 l_extent = l.extent()
                 if l.crs() != target_crs:
-                    ct = QgsCoordinateTransform(l.crs(), target_crs, project.transformContext())
+                    ct = QgsCoordinateTransform(
+                        l.crs(), target_crs, project.transformContext())
                     l_extent = ct.transform(l_extent)
-                extent.combineExtentWith(l_extent)
+                if extent.isNull():
+                    extent = l_extent
+                else:
+                    extent.combineExtentWith(l_extent)
     else:
         if crs != project.crs().authid():
-            target_crs = QgsCoordinateReferenceSystem.fromEpsgId(int(crs.split(':')[1]))
-            ct = QgsCoordinateTransform(project.crs(), target_crs, project.transformContext())
+            target_crs = QgsCoordinateReferenceSystem.fromEpsgId(
+                int(crs.split(':')[1]))
+            ct = QgsCoordinateTransform(
+                project.crs(), target_crs, project.transformContext())
             extent = ct.transform(extent)
 
     return extent, wms_typenames
@@ -168,6 +182,7 @@ def _read_links(metadata):
             'mimeType': l.mimeType,
         })
     return links
+
 
 def _read_constraints(metadata):
     constraints = []
@@ -201,6 +216,7 @@ def _read_contacts(metadata):
         })
     return contacts
 
+
 def layer_info(layer):
     """Extracts layer information from the layer object"""
 
@@ -210,7 +226,8 @@ def layer_info(layer):
         'crs': layer.crs().authid(),
     }
     extent = layer.extent()
-    info['extent'] = [extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum()]
+    info['extent'] = [extent.xMinimum(), extent.yMinimum(),
+                      extent.xMaximum(), extent.yMaximum()]
 
     ####################################################
     # Metadata section
@@ -247,6 +264,7 @@ def layer_info(layer):
 
     return info
 
+
 def project_info(project_path):
     """Extracts project information and returns it as a dictionary"""
 
@@ -273,13 +291,17 @@ def project_info(project_path):
         wmsOutputCrsList = QgsServerProjectUtils.wmsOutputCrsList(p)
         info['crs'] = 'EPSG:4326' if 'EPSG:4326' in wmsOutputCrsList else wmsOutputCrsList[0]
         extent, info['wms_layers'] = project_wms(p, info['crs'])
-        info['extent'] = [extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum()]
+        info['extent'] = [extent.xMinimum(), extent.yMinimum(),
+                          extent.xMaximum(), extent.yMaximum()]
         geographic_extent = extent
         if info['crs'] != 'EPSG:4326':
-            extent_crs = QgsCoordinateReferenceSystem.fromEpsgId(int(info['crs'].split(':')[1]))
-            ct = QgsCoordinateTransform(extent_crs, QgsCoordinateReferenceSystem.fromEpsgId(4326), p.transformContext())
-            geographic_extent = ct.transform(info['geographic_extent'])
-        info['geographic_extent'] = [geographic_extent.xMinimum(), geographic_extent.yMinimum(), geographic_extent.xMaximum(), geographic_extent.yMaximum()]
+            extent_crs = QgsCoordinateReferenceSystem.fromEpsgId(
+                int(info['crs'].split(':')[1]))
+            ct = QgsCoordinateTransform(
+                extent_crs, QgsCoordinateReferenceSystem.fromEpsgId(4326), p.transformContext())
+            geographic_extent = ct.transform(geographic_extent)
+        info['geographic_extent'] = [geographic_extent.xMinimum(), geographic_extent.yMinimum(
+        ), geographic_extent.xMaximum(), geographic_extent.yMaximum()]
 
         ####################################################
         # Metadata section

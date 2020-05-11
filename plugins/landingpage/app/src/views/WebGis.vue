@@ -35,7 +35,8 @@ export default {
       map: {},
       project: {},
       wms_source: {},
-      error: ``
+      error: ``,
+      status: `loading` // [loading,project]
     };
   },
   mounted() {
@@ -47,7 +48,15 @@ export default {
         this.loadMap(this.project);
       })
       .then(() => {
-        let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${this.project.wms_root_name}&FORMAT=application/json`;
+        let layers = this.project.wms_root_name;
+        if (!layers) {
+          let _layers = [];
+          Object.values(this.project.wms_layers_map).forEach(layer_id =>
+            _layers.push(layer_id)
+          );
+          layers = _layers.join(`,`);
+        }
+        let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${layers}&FORMAT=application/json`;
         fetch(Vue.config.qgisUrl + toc_url)
           .then(this.handleErrors)
           .then(response => response.json())
@@ -68,12 +77,10 @@ export default {
           })
           .catch(error => {
             this.error = error.message;
-            //console.log(`Network error: ${error.message}`);
           });
       })
       .catch(error => {
         this.error = error.message;
-        //console.log(`Network error: ${error.message}`);
       });
   },
   methods: {

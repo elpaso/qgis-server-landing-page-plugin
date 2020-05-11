@@ -40,11 +40,13 @@ from qgis.core import QgsProviderRegistry, QgsDataSourceUri
 
 start_app()
 
+
 class TestLandingPageFileSystemLoader(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(__file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
+        os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(
+            __file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
 
@@ -54,8 +56,10 @@ class TestLandingPageFileSystemLoader(TestCase):
 
     def test_projects(self):
         _projects = '|'.join(projects())
-        self.assertTrue(hashlib.md5('Project1.qgs'.encode('utf8')).hexdigest() in _projects)
-        self.assertTrue(hashlib.md5('Project2.qgz'.encode('utf8')).hexdigest() in _projects)
+        self.assertTrue(hashlib.md5(
+            'Project1.qgs'.encode('utf8')).hexdigest() in _projects)
+        self.assertTrue(hashlib.md5(
+            'Project2.qgz'.encode('utf8')).hexdigest() in _projects)
 
     def test_project_info(self):
         path = sorted(projects().values())[1]
@@ -67,11 +71,15 @@ class TestLandingPageFileSystemLoader(TestCase):
     def test_layer_info(self):
         p = QgsProject()
         p.read(list(projects().values())[1])
-        info = layer_info(p.mapLayer('points_842425df_7f45_4091_a6c9_086e1dc1edd1'))
+        info = layer_info(p.mapLayer(
+            'points_842425df_7f45_4091_a6c9_086e1dc1edd1'))
         self.assertEqual(info['name'], 'points')
-        self.assertEqual(info['id'], 'points_842425df_7f45_4091_a6c9_086e1dc1edd1')
-        self.assertEqual(info['metadata']['categories'], ['Geoscientific Information', 'Imagery Base Maps Earth Cover'])
-        self.assertEqual(info['metadata']['contacts'][0], {'name': 'Layer Metadata Contact Name', 'role': 'distributor', 'email': 'Layer Metadata Contact Email', 'fax': 'Layer Metadata Contact Fax', 'voice': 'Layer Metadata Contact Voice', 'organization': 'Layer Metadata Contact Organization', 'position': 'Layer Metadata Contact Position', 'addresses': [{'address': 'street 1', 'city': 'Milan', 'country': 'Italy', 'postalCode': '10021', 'type': 'postal', 'administrativeArea': 'Lombardy'}]})
+        self.assertEqual(
+            info['id'], 'points_842425df_7f45_4091_a6c9_086e1dc1edd1')
+        self.assertEqual(info['metadata']['categories'], [
+                         'Geoscientific Information', 'Imagery Base Maps Earth Cover'])
+        self.assertEqual(info['metadata']['contacts'][0], {'name': 'Layer Metadata Contact Name', 'role': 'distributor', 'email': 'Layer Metadata Contact Email', 'fax': 'Layer Metadata Contact Fax', 'voice': 'Layer Metadata Contact Voice',
+                                                           'organization': 'Layer Metadata Contact Organization', 'position': 'Layer Metadata Contact Position', 'addresses': [{'address': 'street 1', 'city': 'Milan', 'country': 'Italy', 'postalCode': '10021', 'type': 'postal', 'administrativeArea': 'Lombardy'}]})
 
     def test_project_wms(self):
         p0 = QgsProject()
@@ -80,19 +88,23 @@ class TestLandingPageFileSystemLoader(TestCase):
         p1.read(sorted(list(projects().values()))[1])
 
         # Check that project3 from second directory is in the list
-        self.assertTrue('projects2/project3.qgz' in '||'.join(list(projects().values())))
+        self.assertTrue(
+            'projects2/project3.qgz' in '||'.join(list(projects().values())))
 
         # p0 is not restricted and does not use layer ids
         extent, layers = project_wms(p0, 'EPSG:4326')
         self.assertEqual(layers, ['points'])
         # Extent is WMS advertized
-        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon()), 'POLYGON((-1.12 43.23, 11.12 43.23, 11.12 52.26, -1.12 52.26, -1.12 43.23))')
+        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon(
+        )), 'POLYGON((-1.12 43.23, 11.12 43.23, 11.12 52.26, -1.12 52.26, -1.12 43.23))')
 
         # p1 is restricted and does use layer ids
         extent, layers = project_wms(p1, 'EPSG:4326')
-        self.assertEqual(layers, ['points_3857_6c1395a0_1065_41f7_9cf4_8109e268ac84'])
+        self.assertEqual(
+            layers, ['points_3857_6c1395a0_1065_41f7_9cf4_8109e268ac84'])
         # Extent is from the only published layer
-        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon()), 'POLYGON((-25.49 41.98, 38.23 41.98, 38.23 55.95, -25.49 55.95, -25.49 41.98))')
+        self.assertEqual(re.sub(r'(\.\d{2})\d+', r'\1', extent.asWktPolygon(
+        )), 'POLYGON((-25.49 41.98, 38.23 41.98, 38.23 55.95, -25.49 55.95, -25.49 41.98))')
 
     def test_landing_page(self):
         request = QgsBufferServerRequest('/')
@@ -103,7 +115,8 @@ class TestLandingPageFileSystemLoader(TestCase):
 
     def test_get_toc(self):
         p = QgsProject()
-        p.read(os.path.join(os.path.dirname(__file__), 'projects', 'test_project_wms_grouped_nested_layers.qgs'))
+        p.read(os.path.join(os.path.dirname(__file__), 'projects',
+                            'test_project_wms_grouped_nested_layers.qgs'))
         toc = get_toc(p)
         self.assertTrue('osm' in [l['title'] for l in toc['children']])
         osm = toc['children'][-1]
@@ -114,7 +127,6 @@ class TestLandingPageFileSystemLoader(TestCase):
         self.assertTrue(cdb_lines['typename'], 'CDB_Lines_Server_Short_Name')
         self.assertTrue(cdb_lines['title'], 'CDB Lines Server Title')
         self.assertTrue(cdb_lines['name'], 'CDB Lines')
-
 
 
 class TestLandingPagePostgresLoader(TestCase):
@@ -136,10 +148,12 @@ class TestLandingPagePostgresLoader(TestCase):
         # Add DB to conn string
         cls.pg_conn = "dbname=landing_page_test " + cls.pg_conn
         conn = md.createConnection(cls.pg_conn, {})
-        conn.executeSql(open(os.path.join(os.path.dirname(__file__), 'landing_page_test.sql'), 'rt').read())
+        conn.executeSql(open(os.path.join(os.path.dirname(
+            __file__), 'landing_page_test.sql'), 'rt').read())
 
         uri = QgsDataSourceUri(cls.pg_conn)
-        cls.pg_storage_conn = "postgresql://{host}:{port}?sslmode=disable&dbname=landing_page_test&schema=public".format(host=uri.host(), port=uri.port())
+        cls.pg_storage_conn = "postgresql://{host}:{port}?sslmode=disable&dbname=landing_page_test&schema=public".format(
+            host=uri.host(), port=uri.port())
         os.environ['QGIS_SERVER_PROJECTS_PG_CONNECTIONS'] = cls.pg_storage_conn
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
@@ -152,13 +166,15 @@ class TestLandingPagePostgresLoader(TestCase):
         _projects = '|'.join(projects().values())
         self.assertTrue('PGProject1' in _projects)
         self.assertTrue('PGProject2' in _projects)
+        self.assertTrue('my as areas project' in _projects)
 
-    def test_project_wms(self):
-        p0 = QgsProject()
-        p0.read(sorted(list(projects().values()))[0])
-        p1 = QgsProject()
-        p1.read(sorted(list(projects().values()))[1])
-        self.assertEqual(sorted([l.name() for l in p0.mapLayers().values()]), ['italy', 'spain', 'world'])
+    def test_project_extent(self):
+        p = QgsProject()
+        p.read(sorted(list(projects().values()))[2])
+        self.assertTrue(QgsServerProjectUtils.wmsExtent(p).isNull())
+        info = project_info(sorted(list(projects().values()))[2])
+        self.assertEqual(re.sub(
+            r'(\.\d{2})\d+', r'\1', str(info['geographic_extent'])), '[10.68, 52.41, 10.74, 52.45]')
 
 
 if __name__ == '__main__':

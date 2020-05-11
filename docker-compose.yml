@@ -1,11 +1,21 @@
-version: '3.7'
+version: "3.7"
 services:
+  vue-builder:
+    image: elpaso/vue-builder:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.vue.dockerfile
+    volumes:
+      - ${PLUGINS_VOLUME}:/plugins
+    working_dir: /plugins/landingpage/app/
+    command: >
+      bash -c "/usr/local/bin/yarn build && cp -r ./dist /shared-volume"
 
   qgisserver:
     image: elpaso/qgis-server-standalone:latest
     init: true
     ports:
-    - "${PUBLIC_PORT}:${PUBLIC_PORT}"
+      - "${PUBLIC_PORT}:${PUBLIC_PORT}"
     environment:
       - QGIS_SERVER_MAX_THREADS=-1
       # Mounted in ${PLUGINS_VOLUME} volume
@@ -14,9 +24,9 @@ services:
       - QGIS_SERVER_API_RESOURCES_DIRECTORY=${QGIS_SERVER_API_RESOURCES_DIRECTORY}
       # Landing page plugin projects directory
       - QGIS_SERVER_PROJECTS_DIRECTORIES=${QGIS_SERVER_PROJECTS_DIRECTORIES}
-      - QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://postgis:5432?user=${POSTGRES_USER}&password=${POSTGRES_PASS}&sslmode=disable&dbname=${POSTGRES_DBNAME}&schema=public
+      - QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@postgis:5432?sslmode=disable&dbname=${POSTGRES_DBNAME}&schema=public
     command: >
-        bash -c "/usr/bin/xvfb-run -a /usr/bin/qgis_mapserver -l ${QGIS_SERVER_LOG_LEVEL} ${PUBLIC_HOSTNAME}:${PUBLIC_PORT}"
+      bash -c "/usr/bin/xvfb-run -a /usr/bin/qgis_mapserver -l ${QGIS_SERVER_LOG_LEVEL} ${PUBLIC_HOSTNAME}:${PUBLIC_PORT}"
     logging:
       driver: "json-file"
       options:
@@ -28,11 +38,18 @@ services:
       - ${PLUGINS_VOLUME}:/plugins
     networks:
       internal:
+    depends_on:
+      - vue-builder
+      - postgis
 
   postgis:
     image: kartoza/postgis:12.1
+    # Note: cannot remap this port or layers stored in the DB
+    #       will not be loaded correctly. The hostname:port visible
+    #       by clients must be mapped in the same way here (see also
+    #       PUBLIC_HOSTNAME)
     ports:
-    - "55432:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_DBNAME=${POSTGRES_DBNAME}
       - POSTGRES_USER=${POSTGRES_USER}

@@ -1,12 +1,11 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
+import { BootstrapVue } from "bootstrap-vue";
 import App from "./App.vue";
 
 // Install BootstrapVue
 Vue.use(BootstrapVue);
-// Optionally install the BootstrapVue icon components plugin
-Vue.use(IconsPlugin);
+
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 
@@ -17,14 +16,11 @@ Vue.config.qgisUrl = process.env.VUE_APP_QGIS_SERVER_API_ENDPOINT || "";
 // Routing
 Vue.use(VueRouter);
 
-import WebGis from "@/views/WebGis.vue";
-import Catalog from "@/views/Catalog.vue";
-
 const routes = [
   {
     path: "/",
     name: "catalog",
-    component: Catalog,
+    component: () => import("@/views/Catalog.vue"),
     meta: {
       title: "QGIS Server Catalog - Home Page",
       metaTags: [
@@ -38,7 +34,7 @@ const routes = [
   {
     path: "/map/:projectId",
     name: "map",
-    component: WebGis,
+    component: () => import("@/views/WebGis.vue"),
     props: true,
     meta: {
       title: "QGIS Server Project",
