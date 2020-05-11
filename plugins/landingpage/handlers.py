@@ -111,7 +111,8 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
             html_metadata)
 
     def templatePath(self, context):
-        return os.path.join(os.path.dirname(__file__), 'templates', 'landingpage.html')
+        # No templates!
+        return ''
 
     def parameters(self, context):
         return []
@@ -169,7 +170,8 @@ class MapApiHandler(QgsServerOgcApiHandler):
             html_metadata)
 
     def templatePath(self, context):
-        return os.path.join(os.path.dirname(__file__), 'templates', 'map.html')
+        # No templates!
+        return ''
 
     def parameters(self, context):
         return []
