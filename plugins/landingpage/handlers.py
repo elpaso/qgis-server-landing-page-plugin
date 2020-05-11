@@ -31,6 +31,25 @@ from qgis.server import (
 from .utils import project_info, projects
 
 
+def serve_static(path, context):
+    """Serve a static file from path
+
+    :param path: filesystem path
+    :type path: str
+    :param context: request/response API context
+    :type context: QgsServerApiContext
+    """
+
+    with open(path, 'rb') as f:
+        content = f.read()
+        size = len(content)
+
+    mimeType = QMimeDatabase().mimeTypeForFile(path)
+    context.response().setHeader("Content-Type", mimeType.name())
+    context.response().setHeader("Content-Length", str(size))
+    context.response().write(content)
+
+
 class LandingPageApiHandler(QgsServerOgcApiHandler):
     """Project listing handler"""
 
@@ -58,6 +77,17 @@ class LandingPageApiHandler(QgsServerOgcApiHandler):
 
     def handleRequest(self, context):
         """List projects"""
+
+        # Serve static index from dist if not json request
+        filename = context.request().url().path()[1:]
+        if not filename:
+            filename = 'index.html'
+        if not filename.endswith('.json'):
+            path = os.path.join(os.path.dirname(__file__),
+                                'app', 'dist', filename)
+            if not os.path.exists(path):
+                raise Exception('Not found!')
+            return serve_static(path, context)
 
         html_metadata = {
             "pageTitle": "QGIS Server Home Page",
@@ -153,7 +183,7 @@ class StaticApiHandler(QgsServerOgcApiHandler):
         self.setContentTypes([QgsServerOgcApi.HTML, QgsServerOgcApi.JSON])
 
     def path(self):
-        return QRegularExpression("/static/.*")
+        return QRegularExpression("/(static|public|css|js)/.*")
 
     def operationId(self):
         return "Static handler"
@@ -171,21 +201,20 @@ class StaticApiHandler(QgsServerOgcApiHandler):
         return QgsServerOgcApi.JSON
 
     def handleRequest(self, context):
-        """Serve static files from 'static' directory"""
+        """Serve static files from 'static' o 'app/public or app/dist' directory"""
 
         path = os.path.join(os.path.dirname(__file__),
                             context.request().url().path()[1:])
         if not os.path.exists(path):
-            raise Exception('Not found!')
+            path = os.path.join(os.path.dirname(__file__), 'app',
+                                context.request().url().path()[1:])
+            if not os.path.exists(path):
+                path = os.path.join(os.path.dirname(__file__), 'app', 'dist',
+                                    context.request().url().path()[1:])
+                if not os.path.exists(path):
+                    raise Exception('Not found!')
 
-        with open(path, 'rb') as f:
-            content = f.read()
-            size = len(content)
-
-        mimeType = QMimeDatabase().mimeTypeForFile(path)
-        context.response().setHeader("Content-Type", mimeType.name())
-        context.response().setHeader("Content-Length", str(size))
-        context.response().write(content)
+        return serve_static(path, context)
 
     def parameters(self, context):
         return []

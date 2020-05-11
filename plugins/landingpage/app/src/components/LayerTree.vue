@@ -1,6 +1,18 @@
 <template>
   <div>
-    <b-button id="layertree-toggle" v-b-toggle.layertree>Toggle Sidebar</b-button>
+    <div class="leaflet-left leaflet-top layertree-toggle-container">
+      <div class="leaflet-touch">
+        <div class="leaflet-control-layers leaflet-bar leaflet-control" aria-haspopup="true">
+          <a
+            id="layertree-toggle"
+            v-b-toggle.layertree
+            class="leaflet-control-layers-toggle"
+            v-b-tooltip.hover
+            title="Show Legend"
+          ></a>
+        </div>
+      </div>
+    </div>
     <b-sidebar id="layertree" title="Legend" shadow>
       <div class="px-3 py-2" v-if="project.toc">
         <ul
@@ -41,7 +53,7 @@ export default {
   },
   methods: {
     /**
-     * Find a layer node from typname and children
+     * Find a layer node from typename and children
      */
     findLayerNode(typename, children) {
       if (children) {
@@ -111,14 +123,19 @@ export default {
 </script>
 
 <style>
+.leaflet-top.layertree-toggle-container {
+  top: 8.5rem;
+}
+
 #layertree-toggle {
-  position: absolute;
-  top: 9.5rem;
-  left: 0.5rem;
-  z-index: 1000;
+  cursor: pointer;
 }
 
 ul.layer-group {
   padding-left: 1em;
+}
+
+.b-sidebar-body > div > ul.layer-group {
+  padding-left: 0;
 }
 </style>

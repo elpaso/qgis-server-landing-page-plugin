@@ -1,5 +1,6 @@
 <template>
   <div class="wrapper">
+    <b-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</b-alert>
     <LayerTree :project="project" v-on:toggleLayer="toggleLayer" />
     <div id="map">
       <l-map @ready="setMap">
@@ -16,7 +17,8 @@
 import Vue from "vue";
 import LayerTree from "@/components/LayerTree.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
-import WMS from "../../node_modules/leaflet-wms/leaflet.wms.js";
+//import WMS from "../../node_modules/leaflet-wms/leaflet.wms.js";
+import WMS from "leaflet-wms/leaflet.wms.js";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 
@@ -32,21 +34,55 @@ export default {
     return {
       map: {},
       project: {},
-      wms_source: {}
+      wms_source: {},
+      error: ``
     };
   },
   mounted() {
     fetch(Vue.config.qgisUrl + `/map/` + this.projectId + `.json`)
+      .then(this.handleErrors)
       .then(response => response.json())
       .then(json => {
         this.project = json.project;
         this.loadMap(this.project);
+      })
+      .then(() => {
+        let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${this.project.wms_root_name}&FORMAT=application/json`;
+        fetch(Vue.config.qgisUrl + toc_url)
+          .then(this.handleErrors)
+          .then(response => response.json())
+          .then(json => {
+            json.nodes.forEach(layer => {
+              let node = this.findLayerNode(
+                layer.title,
+                this.project.toc.children
+              );
+              if (node) {
+                if (layer.icon) {
+                  node.children.push(layer);
+                } else {
+                  layer.symbols.forEach(symbol => node.children.push(symbol));
+                }
+              }
+            });
+          })
+          .catch(error => {
+            this.error = error.message;
+            //console.log(`Network error: ${error.message}`);
+          });
+      })
+      .catch(error => {
+        this.error = error.message;
+        //console.log(`Network error: ${error.message}`);
       });
   },
   methods: {
     setMap(map) {
       this.map = map;
     },
+    /**
+     * Toggles a layer by typename
+     */
     toggleLayer(typename) {
       if (typename in this.wms_source._subLayers) {
         this.wms_source.removeSubLayer(typename);
@@ -69,9 +105,36 @@ export default {
       }
     },
     /**
-     * Returns a list of typenames ordered by drawing order
+     * Find a layer by title
      */
-    layerOrder() {},
+    findLayerNode(title, children) {
+      if (children) {
+        for (let i = 0; i < children.length; ++i) {
+          if (children[i].title == title) {
+            return children[i];
+          }
+          let res = this.findLayerNode(title, children[i].children);
+          if (res) {
+            return res;
+          }
+        }
+      }
+    },
+    /**
+     * Handles ajax errors
+     */
+    handleErrors(response) {
+      if (!response) {
+        throw Error(`Error fetching data from QGIS Server`);
+      }
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+      return response;
+    },
+    /**
+     * Loads map
+     */
     loadMap(project) {
       let west = project.geographic_extent[0];
       let south = project.geographic_extent[1];
@@ -108,6 +171,13 @@ export default {
 <style scoped>
 .wrapper {
   height: calc(100vh - 3.5em);
+}
+
+.alert-danger {
+  position: absolute;
+  top: 4em;
+  margin: 0 8em;
+  z-index: 10000;
 }
 
 #map {

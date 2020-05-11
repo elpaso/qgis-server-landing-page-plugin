@@ -45,6 +45,9 @@ class LandingPageApi(QgsServerOgcApi):
             url.path() == '/' or
             url.path() == '' or
             url.path().startswith('/static/') or
+            url.path().startswith('/css/') or
+            url.path().startswith('/js/') or
+            url.path().startswith('/public/') or
             url.path().startswith('/map/') or
             url.path().startswith('/index')
         )
@@ -59,9 +62,18 @@ class ProjectLoaderFilter(QgsServerFilter):
         handler = self.serverInterface().requestHandler()
         project_dict = projects()
         try:
-            os.environ['QGIS_PROJECT_FILE'] = project_dict[self.project_id_re.findall(handler.url())[0]]
+            os.environ['QGIS_PROJECT_FILE'] = project_dict[self.project_id_re.findall(
+                handler.url())[0]]
         except Exception as ex:
             QgsMessageLog.logMessage('Could not get project from url: %s' % ex)
+
+
+class CorsFilter(QgsServerFilter):
+    """Allow origin"""
+
+    def responseComplete(self):
+        handler = self.serverInterface().requestHandler()
+        handler.setResponseHeader('Access-Control-Allow-Origin', '*')
 
 
 class LandingPageApiLoader():
@@ -69,7 +81,7 @@ class LandingPageApiLoader():
 
     def __init__(self, serverIface):
         self.api = LandingPageApi(serverIface, '',
-                              'Landing Page API', 'Landing Page API', '1.0')
+                                  'Landing Page API', 'Landing Page API', '1.0')
         self.map_handler = MapApiHandler()
         self.api.registerHandler(self.map_handler)
         self.static_handler = StaticApiHandler()
@@ -78,5 +90,6 @@ class LandingPageApiLoader():
         self.api.registerHandler(self.handler)
         serverIface.serviceRegistry().registerApi(self.api)
         self.loader_filter = ProjectLoaderFilter(serverIface)
-        serverIface.registerFilter( self.loader_filter, 1)
-
+        serverIface.registerFilter(self.loader_filter, 1)
+        self.cors_filter = CorsFilter(serverIface)
+        serverIface.registerFilter(self.cors_filter, 1)
