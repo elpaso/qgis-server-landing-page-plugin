@@ -13,6 +13,9 @@ services:
 
   qgisserver:
     image: elpaso/qgis-server-standalone:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.qgis_server_standalone.dockerfile
     init: true
     ports:
       - "${PUBLIC_PORT}:${PUBLIC_PORT}"
