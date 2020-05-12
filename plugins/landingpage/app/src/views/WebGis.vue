@@ -16,8 +16,7 @@
 <script>
 import LayerTree from "@/components/LayerTree.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
-//import WMS from "../../node_modules/leaflet-wms/leaflet.wms.js";
-import WMS from "leaflet-wms/leaflet.wms.js";
+import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 
@@ -160,7 +159,7 @@ export default {
         this.map.fitBounds(jl.getBounds());
       }
 
-      this.wms_source = WMS.source(`/project/` + project.id + `/?`, {
+      this.wms_source = WmsSource.source(`/project/` + project.id + `/?`, {
         tileSize: 512,
         transparent: true,
         format: "image/png",
