@@ -24,4 +24,9 @@ module.exports = {
       return args;
     });
   },
+  // Use QGIS Server on host port 8001
+  // You can change this to reflect your development setup
+  devServer: {
+    proxy: "http://192.168.99.46:8001",
+  },
 };

@@ -10,8 +10,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 
 Vue.config.productionTip = false;
-// From the environment
-Vue.config.qgisUrl = process.env.VUE_APP_QGIS_SERVER_API_ENDPOINT || "";
 
 // Routing
 Vue.use(VueRouter);

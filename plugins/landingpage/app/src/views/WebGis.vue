@@ -14,7 +14,6 @@
 </template>
 
 <script>
-import Vue from "vue";
 import LayerTree from "@/components/LayerTree.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 //import WMS from "../../node_modules/leaflet-wms/leaflet.wms.js";
@@ -40,7 +39,7 @@ export default {
     };
   },
   mounted() {
-    fetch(Vue.config.qgisUrl + `/map/` + this.projectId + `.json`)
+    fetch(`/map/${this.projectId}.json`)
       .then(this.handleErrors)
       .then(response => response.json())
       .then(json => {
@@ -57,7 +56,7 @@ export default {
           layers = _layers.join(`,`);
         }
         let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${layers}&FORMAT=application/json`;
-        fetch(Vue.config.qgisUrl + toc_url)
+        fetch(toc_url)
           .then(this.handleErrors)
           .then(response => response.json())
           .then(json => {
@@ -161,15 +160,12 @@ export default {
         this.map.fitBounds(jl.getBounds());
       }
 
-      this.wms_source = WMS.source(
-        Vue.config.qgisUrl + `/project/` + project.id + `/?`,
-        {
-          tileSize: 512,
-          transparent: true,
-          format: "image/png",
-          dpi: window.devicePixelRatio * 96
-        }
-      ).addTo(this.map);
+      this.wms_source = WMS.source(`/project/` + project.id + `/?`, {
+        tileSize: 512,
+        transparent: true,
+        format: "image/png",
+        dpi: window.devicePixelRatio * 96
+      }).addTo(this.map);
     }
   }
 };

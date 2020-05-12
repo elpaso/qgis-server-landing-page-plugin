@@ -1,6 +1,6 @@
 # qgis-server-standalone-docker
-QGIS Server Standalone Docker
 
+QGIS Server Standalone Docker
 
 ## Sample .env file
 
@@ -20,5 +20,16 @@ QGIS_SERVER_API_RESOURCES_DIRECTORY=/usr/share/qgis/resources/server/api/
 QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
 ```
 
-
 `QGIS_SERVER_LANDINGPAGE_DEBUG` when activated will print all json information inside the templates.
+
+## TODO
+
+- PG PKI certs
+- Map footer with CRS, scale etc. (zoom to predefined scale?)
+- Metadata formatting
+- Feature table (dependent onf WFW3 active)
+- Relations and joins? (dependent onf WFW3 active)
+- Searches
+- BBOX selection
+- map themese
+- base maps switcher

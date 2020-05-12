@@ -44,17 +44,17 @@
             <b-button
               variant="link"
               role="button"
-              :href="qgisUrl('/project/' + project.id + '/wfs3')"
+              :href="'/project/' + project.id + '/wfs3'"
             >OAPIF/WFS3</b-button>
             <b-button
               variant="link"
               role="button"
-              :href="qgisUrl('/project/' + project.id + '/?SERVICE=WFS&amp;REQUEST=GetCapabilities')"
+              :href="'/project/' + project.id + '/?SERVICE=WFS&amp;REQUEST=GetCapabilities'"
             >WFS GetCapabilities</b-button>
             <b-button
               variant="link"
               role="button"
-              :href="qgisUrl('/project/' + project.id + '/?SERVICE=WMS&amp;REQUEST=GetCapabilities')"
+              :href="'/project/' + project.id + '/?SERVICE=WMS&amp;REQUEST=GetCapabilities'"
             >WMS GetCapabilities</b-button>
             <b-collapse :id="'metadata-' + project.id" class="mt-2">
               <Metadata :project="project" />
@@ -67,7 +67,6 @@
 </template>
 
 <script>
-import Vue from "vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
@@ -89,7 +88,7 @@ export default {
     };
   },
   mounted() {
-    fetch(Vue.config.qgisUrl + `/index.json`)
+    fetch(`/index.json`)
       .then(this.handleErrors)
       .then(response => response.json())
       .then(json => {
@@ -119,14 +118,11 @@ export default {
       ) {
         map.fitBounds(jl.getBounds());
       }
-      WMS.overlay(Vue.config.qgisUrl + "/project/" + project.id + "/?", {
+      WMS.overlay(`/project/${project.id}/?`, {
         layers: project.wms_root_name,
         transparent: true,
         format: "image/png"
       }).addTo(map);
-    },
-    qgisUrl(url) {
-      return Vue.config.qgisUrl + url;
     }
   }
 };
