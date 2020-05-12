@@ -1,16 +1,40 @@
 <template>
-  <div class="wrapper">
-    <b-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</b-alert>
-    <LayerTree :project="project" v-on:toggleLayer="toggleLayer" />
-    <div id="map">
-      <l-map @ready="setMap">
-        <l-tile-layer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          v-if="project.capabilities && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
-        ></l-tile-layer>
-      </l-map>
-    </div>
-  </div>
+  <v-app id="project">
+    <v-app-bar
+      app
+      dense
+      collapse-on-scroll
+      clipped-left
+      color="green"
+      dark
+      :v-if="status != 'loading'"
+    >
+      <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
+      <v-toolbar-title>{{ project.title }}</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon title="Home Page" :to="{ name: 'catalog' }">
+        <v-icon>mdi-home-circle</v-icon>
+      </v-btn>
+    </v-app-bar>
+    <LayerTree
+      :project="project"
+      :expandedToc="expandedToc"
+      v-on:toggleLayer="toggleLayer"
+      :v-if="status != 'loading' && project.toc"
+    />
+    <v-content>
+      <v-container id="map" class="fill-height" fluid>
+        <!--v-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</v-alert-->
+
+        <l-map @ready="setMap" style="z-index: 0;">
+          <l-tile-layer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            v-if="project.capabilities && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+          ></l-tile-layer>
+        </l-map>
+      </v-container>
+    </v-content>
+  </v-app>
 </template>
 
 <script>
@@ -34,7 +58,8 @@ export default {
       project: {},
       wms_source: {},
       error: ``,
-      status: `loading` // [loading,project]
+      status: `loading`, // [loading,project]
+      expandedToc: false
     };
   },
   mounted() {
@@ -171,8 +196,8 @@ export default {
 </script>
 
 <style scoped>
-.wrapper {
-  height: calc(100vh - 3.5em);
+#wrapper {
+  height: 100%;
 }
 
 .alert-danger {
@@ -183,7 +208,6 @@ export default {
 }
 
 #map {
-  width: 100%;
-  height: 100%;
+  padding: 0;
 }
 </style>

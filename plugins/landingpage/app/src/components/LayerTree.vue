@@ -1,35 +1,21 @@
 <template>
-  <div>
-    <div class="leaflet-left leaflet-top layertree-toggle-container">
-      <div class="leaflet-touch">
-        <div class="leaflet-control-layers leaflet-bar leaflet-control" aria-haspopup="true">
-          <a
-            id="layertree-toggle"
-            v-b-toggle.layertree
-            class="leaflet-control-layers-toggle"
-            v-b-tooltip.hover
-            title="Show Legend"
-          ></a>
-        </div>
-      </div>
-    </div>
-    <b-sidebar id="layertree" title="Legend" shadow>
-      <div class="px-3 py-2" v-if="project.toc">
-        <ul
-          class="list list-unstyled layer-group"
-          v-for="(element, entry) in project.toc.children"
-          :key="uniqueKey(entry)"
-        >
-          <LayerTreeNode
-            :node="element"
-            v-on:toggleLayer="toggleLayer"
-            v-on:toggleGroup="toggleGroup"
-          />
-        </ul>
-      </div>
-      <!-- TODO: else loading -->
-    </b-sidebar>
-  </div>
+  <v-navigation-drawer v-model="expandedToc">
+    <v-card flat class="mx-auto layertree-container">
+      <h4>Legend</h4>
+      <ul
+        id="layertree"
+        class="list list-unstyled layer-group"
+        v-for="(element, entry) in project.toc.children"
+        :key="uniqueKey(entry)"
+      >
+        <LayerTreeNode
+          :node="element"
+          v-on:toggleLayer="toggleLayer"
+          v-on:toggleGroup="toggleGroup"
+        />
+      </ul>
+    </v-card>
+  </v-navigation-drawer>
 </template>
 
 <script>
@@ -39,7 +25,8 @@ export default {
   name: "LayerTree",
   props: {
     projectId: String,
-    project: Object
+    project: Object,
+    expandedToc: null
   },
   components: {
     LayerTreeNode
@@ -131,11 +118,19 @@ export default {
   cursor: pointer;
 }
 
+.layertree-container {
+  margin-top: 60px;
+}
+
 ul.layer-group {
   padding-left: 1em;
 }
 
 .b-sidebar-body > div > ul.layer-group {
   padding-left: 0;
+}
+
+.v-navigation-drawer {
+  z-index: 5000;
 }
 </style>

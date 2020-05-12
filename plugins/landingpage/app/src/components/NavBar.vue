@@ -1,15 +1,10 @@
 <template>
-  <div id="navbar">
-    <b-navbar toggleable="lg" type="dark" variant="info">
-      <b-navbar-brand href="#">QGIS Server</b-navbar-brand>
-
-      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-
-      <b-collapse id="nav-collapse" is-nav>
-        <b-navbar-nav>
-          <b-nav-item :to="{ name: 'catalog' }">Catalog</b-nav-item>
-        </b-navbar-nav>
-      </b-collapse>
-    </b-navbar>
-  </div>
+  <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark>
+    <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+    <v-toolbar-title>QGIS Server</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-btn icon title="Home Page" :to="{ name: 'catalog' }">
+      <v-icon>mdi-home-circle</v-icon>
+    </v-btn>
+  </v-app-bar>
 </template>

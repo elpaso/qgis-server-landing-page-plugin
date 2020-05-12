@@ -1,25 +1,24 @@
 <template>
-  <div id="app">
-    <NavBar />
+  <v-app id="app">
     <router-view></router-view>
-  </div>
+    <v-footer app>
+      <!-- -->
+    </v-footer>
+  </v-app>
 </template>
 
 <script>
-import NavBar from "./components/NavBar.vue";
+//import NavBar from "./components/NavBar.vue";
 export default {
   name: "App",
   components: {
-    NavBar
+    //NavBar
   }
 };
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  height: 100%;
+.v-app-bar.v-app-bar--fixed {
+  z-index: 10000 !important;
 }
 </style>
