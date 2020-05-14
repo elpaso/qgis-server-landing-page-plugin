@@ -1,19 +1,20 @@
 <template>
-  <v-navigation-drawer v-model="expandedToc">
-    <v-card flat class="mx-auto layertree-container">
-      <h4>Legend</h4>
-      <ul
-        id="layertree"
-        class="list list-unstyled layer-group"
-        v-for="(element, entry) in project.toc.children"
-        :key="uniqueKey(entry)"
-      >
-        <LayerTreeNode
-          :node="element"
-          v-on:toggleLayer="toggleLayer"
-          v-on:toggleGroup="toggleGroup"
-        />
-      </ul>
+  <v-navigation-drawer absolute hide-overlay stateless width="300px" v-model="drawer">
+    <v-card flat class="mx-auto layertree-container" v-if="project.toc">
+      <v-card-text>
+        <h4>Legend</h4>
+        <div
+          id="layertree"
+          v-for="(element, entry) in project.toc.children"
+          :key="uniqueKey(entry)"
+        >
+          <LayerTreeNode
+            :node="element"
+            v-on:toggleLayer="toggleLayer"
+            v-on:toggleGroup="toggleGroup"
+          />
+        </div>
+      </v-card-text>
     </v-card>
   </v-navigation-drawer>
 </template>
@@ -25,8 +26,8 @@ export default {
   name: "LayerTree",
   props: {
     projectId: String,
-    project: Object,
-    expandedToc: null
+    project: {},
+    drawer: null
   },
   components: {
     LayerTreeNode
@@ -56,15 +57,15 @@ export default {
       }
     },
     /**
-     * Find a group node from tree id hash and children
+     * Find a node from tree id hash and children
      */
-    findGroupNode(tree_id_hash, children) {
+    findNodeByHash(tree_id_hash, children) {
       if (children) {
         for (let i = 0; i < children.length; ++i) {
           if (children[i].tree_id_hash == tree_id_hash) {
             return children[i];
           }
-          let res = this.findGroupNode(tree_id_hash, children[i].children);
+          let res = this.findNodeByHash(tree_id_hash, children[i].children);
           if (res) {
             return res;
           }
@@ -72,20 +73,20 @@ export default {
       }
     },
     /**
-     * Toggle a single layer by typename
+     * Toggle a single layer  by tree id hash
      */
-    toggleLayer(typename) {
-      let node = this.findLayerNode(typename, this.project.toc.children);
+    toggleLayer(tree_id_hash) {
+      let node = this.findNodeByHash(tree_id_hash, this.project.toc.children);
       if (node) {
         node.visible = !node.visible;
-        this.$emit("toggleLayer", typename);
+        this.$emit("setLayerVisibility", node.typename, node.visible);
       }
     },
     /**
      * Toggle a group by tree id hash
      */
     toggleGroup(tree_id_hash) {
-      let node = this.findGroupNode(tree_id_hash, this.project.toc.children);
+      let node = this.findNodeByHash(tree_id_hash, this.project.toc.children);
       if (node) {
         this.setGroupNodeVisibility(node, !node.visible);
       }
@@ -97,7 +98,7 @@ export default {
       groupNode.visible = visible;
       // Emit if it's a layer
       if (groupNode.is_layer) {
-        this.$emit("toggleLayer", groupNode.typename);
+        this.$emit("setLayerVisibility", groupNode.typename, visible);
       }
       if (groupNode.children) {
         for (let i = 0; i < groupNode.children.length; ++i) {

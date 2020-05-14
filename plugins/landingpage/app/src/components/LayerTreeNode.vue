@@ -1,78 +1,106 @@
 <template>
-  <li :id="node.tree_id_hash">
-    <div v-if="node.is_layer && node.layer_type == 'vector'">
-      <i
-        data-toggle="collapse"
-        :aria-expanded="node.expanded ? 'true' : 'false'"
-        aria-controls="'node-' + node.tree_id_hash"
-        :class="'group-toggle fa fa-caret-' + (node.expanded ? 'down' : 'right')"
-        @click="node.expanded = !node.expanded"
-        v-if="node.children.length"
-      ></i>
-      <i
-        v-b-tooltip.hover
-        title="Toggle layer visibility"
-        :class="'node-check fa ' + (node.visible ? 'fa-check-square-o visible' : 'fa-square-o')"
-        @click="toggleLayer(node.typename)"
-      ></i>
+  <div :id="node.tree_id_hash">
+    <div class="v-treeview-node" v-if="node.is_layer && node.layer_type == 'vector'">
+      <div class="node-title">
+        <v-icon
+          data-toggle="collapse"
+          :aria-expanded="node.expanded ? 'true' : 'false'"
+          aria-controls="'node-' + node.tree_id_hash"
+          @click="node.expanded = !node.expanded"
+          v-if="node.children.length"
+        >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" icon @click="toggleLayer(node.tree_id_hash)">
+              <v-icon>mdi-checkbox-{{ node.visible ? `marked` : `blank-outline` }}</v-icon>
+            </v-btn>
+          </template>
+          Toggle layer visibility
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <span
+              v-on="on"
+              class="group-title"
+              @click="node.expanded = ! node.expanded"
+            >{{ node.title }}</span>
+          </template>
+          <div>
+            {{ node.title }}
+            <i>({{ node.typename }})</i>
+          </div>
+          <div v-if="node.description">{{ node.description }}</div>
+        </v-tooltip>
+      </div>
+
       <template v-if="node.layer_type=='vector' && node.children.length">
-        <b-button
-          class="group-title"
-          variant="link"
-          v-b-toggle="'node-' + node.tree_id_hash"
-        >{{ node.title }}</b-button>
-        <b-collapse
-          tag="ul"
-          :id="'node-' + node.tree_id_hash"
-          class="list list-unstyled layer-legend"
-          v-for="child in node.children"
-          :key="child.title"
-          v-model="node.expanded"
-        >
-          <li>
-            <img class="symbol" :src="`data:image/png;base64,${child.icon}`" />
-            {{ child.title }}
-          </li>
-        </b-collapse>
+        <v-expand-transition>
+          <div class="vector-legend" v-if="node.expanded">
+            <div
+              :id="'node-' + node.tree_id_hash"
+              class="v-treeview-node layer-legend"
+              v-for="child in node.children"
+              :key="child.title"
+              :aria-expanded="node.expanded ? 'true' : 'false'"
+            >
+              <div class="v-treeview-node vector-legend-entry">
+                <img class="symbol" :src="`data:image/png;base64,${child.icon}`" />
+                <v-tooltip top>
+                  <template v-slot:activator="{ on }">
+                    <span v-on="on" @click="node.expanded = ! node.expanded">{{ child.title }}</span>
+                  </template>
+                  <div>{{ child.title }}</div>
+                </v-tooltip>
+              </div>
+            </div>
+          </div>
+        </v-expand-transition>
       </template>
-      <span v-else>{{ node.title }}</span>
     </div>
     <div v-else>
-      <!-- it's a group -->
-      <i
-        data-toggle="collapse"
-        :aria-expanded="node.expanded ? 'true' : 'false'"
-        :class="'group-toggle fa fa-caret-' + (node.expanded ? 'down' : 'right')"
-        aria-controls="'node-' + node.tree_id_hash"
+      <!-- it's a group or a raster -->
+      <v-icon
         @click="node.expanded = !node.expanded"
-      ></i>
-      <i
-        v-b-tooltip.hover
-        title="Toggle group visibility"
-        :class="'node-check fa ' + (node.visible ? 'fa-check-square-o visible' : 'fa-square-o')"
-        @click="toggleGroup(node.tree_id_hash)"
-      ></i>
-      <b-button
-        class="group-title"
-        variant="link"
-        v-b-toggle="'node-' + node.tree_id_hash"
-      >{{ node.title }}</b-button>
-      <b-collapse
-        tag="ul"
-        :id="'node-' + node.tree_id_hash"
-        class="list list-unstyled layer-group"
-        v-model="node.expanded"
-        v-for="child_node in node.children"
-        :key="child_node.tree_id_hash"
-      >
-        <LayerTreeNode
-          :node="child_node"
-          v-on:toggleLayer="toggleLayer"
-          v-on:toggleGroup="toggleGroup"
-        />
-      </b-collapse>
+        v-if="node.layer_type != 'raster'"
+      >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon>
+      <v-icon v-else color="light-green lighten-3">mdi-checkerboard</v-icon>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" icon @click="toggleGroup(node.tree_id_hash)">
+            <v-icon>mdi-checkbox-{{ node.visible ? `marked` : `blank-outline` }}</v-icon>
+          </v-btn>
+        </template>
+        Toggle group visibility
+      </v-tooltip>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <span
+            v-on="on"
+            class="group-title"
+            @click="node.expanded = ! node.expanded"
+          >{{ node.title }}</span>
+        </template>
+        <div>{{ node.title }}</div>
+        <div v-if="node.description">{{ node.description }}</div>
+      </v-tooltip>
+
+      <v-expand-transition>
+        <div
+          :class="`group-container group-father-of-` + node.children.length"
+          :id="'node-' + node.tree_id_hash"
+          v-show="node.expanded"
+        >
+          <LayerTreeNode
+            :node="child_node"
+            v-on:toggleLayer="toggleLayer"
+            v-on:toggleGroup="toggleGroup"
+            v-for="child_node in node.children"
+            :key="child_node.tree_id_hash"
+          />
+        </div>
+      </v-expand-transition>
     </div>
-  </li>
+  </div>
 </template>
 
 <script>
@@ -82,17 +110,11 @@ export default {
     node: {}
   },
   methods: {
-    toggleLayer(typename) {
-      this.$emit("toggleLayer", typename);
+    toggleLayer(tree_id_hash) {
+      this.$emit("toggleLayer", tree_id_hash);
     },
     toggleGroup(tree_id_hash) {
       this.$emit("toggleGroup", tree_id_hash);
-    }
-  },
-  mounted() {
-    if (this.node.is_layer && this.node.visible) {
-      this.node.visible = false;
-      this.$emit("toggleLayer", this.node.typename);
     }
   }
 };
@@ -101,20 +123,30 @@ export default {
 <style scoped>
 @import "https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css";
 
-i.group-toggle,
-i.node-check {
+.group-title {
   cursor: pointer;
-  width: 1em;
+  overflow: hidden;
 }
 
-i.node-check {
-  margin-right: 0.25em;
-}
-button.group-title {
-  padding: 0;
+.group-container {
+  margin-left: 2em;
 }
 
-ul.layer-legend {
-  margin-left: 1em;
+.group-title,
+.node-title,
+.vector-legend-entry {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vector-legend-entry span {
+  margin-left: 10px;
+}
+.vector-legend {
+  margin-left: 1.3em;
+}
+
+.layer-legend {
+  margin-left: 16px;
 }
 </style>

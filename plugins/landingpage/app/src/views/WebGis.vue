@@ -1,14 +1,6 @@
 <template>
   <v-app id="project">
-    <v-app-bar
-      app
-      dense
-      collapse-on-scroll
-      clipped-left
-      color="green"
-      dark
-      :v-if="status != 'loading'"
-    >
+    <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark v-if="project">
       <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
       <v-toolbar-title>{{ project.title }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -18,20 +10,20 @@
     </v-app-bar>
     <LayerTree
       :project="project"
-      :expandedToc="expandedToc"
-      v-on:toggleLayer="toggleLayer"
-      :v-if="status != 'loading' && project.toc"
+      :drawer="expandedToc"
+      v-on:setLayerVisibility="setLayerVisibility"
     />
     <v-content>
       <v-container id="map" class="fill-height" fluid>
         <!--v-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</v-alert-->
-
-        <l-map @ready="setMap" style="z-index: 0;">
-          <l-tile-layer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            v-if="project.capabilities && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
-          ></l-tile-layer>
-        </l-map>
+        <v-layout>
+          <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
+            <l-tile-layer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              v-if="project.capabilities && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+            ></l-tile-layer>
+          </l-map>
+        </v-layout>
       </v-container>
     </v-content>
   </v-app>
@@ -43,6 +35,11 @@ import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
+import L from "leaflet";
+
+L.Control.include({
+  _refocusOnMap: L.Util.falseFn // Do nothing.
+});
 
 export default {
   name: "WebGis",
@@ -58,7 +55,6 @@ export default {
       project: {},
       wms_source: {},
       error: ``,
-      status: `loading`, // [loading,project]
       expandedToc: false
     };
   },
@@ -69,8 +65,25 @@ export default {
       .then(json => {
         this.project = json.project;
         this.loadMap(this.project);
+        this.loading = `project`;
       })
       .then(() => {
+        Object.keys(this.project.wms_layers_map)
+          .reverse()
+          .forEach(title => {
+            let node = this.findLayerNode(title, this.project.toc.children);
+            if (node && node.visible) {
+              console.log(`Loading layer ${title}`);
+              this.wms_source._subLayers[
+                node.typename
+              ] = this.wms_source.getLayer(node.typename);
+            } else if (!node) {
+              console.log(`Could not find layer node: ${title}`);
+            } else if (!node.visible) {
+              console.log(`Not loading layer (not visible): ${title}`);
+            }
+          });
+        this.wms_source.refreshOverlay();
         let layers = this.project.wms_root_name;
         if (!layers) {
           let _layers = [];
@@ -107,16 +120,20 @@ export default {
       });
   },
   methods: {
+    onResize() {
+      this.$refs["map"].mapObject._onResize();
+    },
     setMap(map) {
       this.map = map;
     },
     /**
      * Toggles a layer by typename
      */
-    toggleLayer(typename) {
-      if (typename in this.wms_source._subLayers) {
+    setLayerVisibility(typename, visible) {
+      if (typename in this.wms_source._subLayers && !visible) {
+        console.log(`Removing layer: ${typename}`);
         this.wms_source.removeSubLayer(typename);
-      } else {
+      } else if (visible && !(typename in this.wms_source._subLayers)) {
         // We need to respect drawing order!
         this.wms_source._subLayers[typename] = this.wms_source.getLayer(
           typename
@@ -127,11 +144,14 @@ export default {
         ).reverse()) {
           //let _type_name = this.project.wms_layers_map[title];
           if (_type_name in this.wms_source._subLayers) {
+            console.log(`Adding layer: ${typename}`);
             new_sub_layers[_type_name] = this.wms_source._subLayers[_type_name];
           }
         }
         this.wms_source._subLayers = new_sub_layers;
         this.wms_source.refreshOverlay();
+      } else {
+        console.log(`Nothing to do for: ${typename} - ${visible}`);
       }
     },
     /**
@@ -183,7 +203,6 @@ export default {
       ) {
         this.map.fitBounds(jl.getBounds());
       }
-
       this.wms_source = WmsSource.source(`/project/` + project.id + `/?`, {
         tileSize: 512,
         transparent: true,
@@ -209,5 +228,9 @@ export default {
 
 #map {
   padding: 0;
+}
+
+.v-content {
+  padding-bottom: 0 !important;
 }
 </style>

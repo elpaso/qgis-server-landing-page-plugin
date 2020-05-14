@@ -33,3 +33,4 @@ QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/l
 - BBOX selection
 - map themese
 - base maps switcher
+- open QgsProject without loading layers

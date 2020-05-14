@@ -1,9 +1,6 @@
 <template>
   <v-app id="app">
     <router-view></router-view>
-    <v-footer app>
-      <!-- -->
-    </v-footer>
   </v-app>
 </template>
 
@@ -18,7 +15,8 @@ export default {
 </script>
 
 <style>
-.v-app-bar.v-app-bar--fixed {
+.v-app-bar.v-app-bar--fixed,
+.v-footer {
   z-index: 10000 !important;
 }
 </style>

@@ -1,36 +1,20 @@
 <template>
   <v-app id="catalog">
+    <v-overlay light v-if="status == `loading` && error.length == 0">
+      <v-progress-circular indeterminate color="lime" size="64"></v-progress-circular>
+    </v-overlay>
     <v-app-bar app dense hide-on-scroll color="green" dark>
       <v-toolbar-title>QGIS Server Catalog</v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-content>
-      <v-container id="catalog" class="fill-height" fluid>
-        <b-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</b-alert>
-        <template div v-if="status == `loading`">
-          <div class="row">
-            <div class="col-sm-2">
-              <b-spinner
-                variant="info"
-                style="width: 3rem; height: 3rem; text-align:center;"
-                label="Large Spinner"
-                type="grow"
-              ></b-spinner>
-            </div>
-            <div class="col-sm-10">
-              <h4 class="loading">Loading...</h4>
-            </div>
-          </div>
-        </template>
-
-        <b-jumbotron
-          header="QGIS Server Projects Catalog"
-          v-else-if="status == `empty`"
-          lead="The catalog is empty"
-        >
-          <p>This QGIS Server catalog does not contain any project.</p>
-        </b-jumbotron>
-        <template v-else>
+      <v-container id="catalog" class="fill-height" fluid v-if="projects">
+        <v-alert v-if="error.length > 0" type="error">{{ error }}</v-alert>
+        <v-alert
+          type="warning"
+          v-if="status == `empty`"
+        >This QGIS Server catalog does not contain any project.</v-alert>
+        <template v-if="projects">
           <v-card
             class="mx-auto mb-4"
             max-width="800"
@@ -51,27 +35,37 @@
             >{{ project.description }}</v-card-subtitle>
 
             <v-card-actions>
-              <v-btn color="orange" @click="project.show = !project.show" text>
-                <v-icon>{{ project.show ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>Metadata
+              <v-dialog class="metadata" scrollable v-model="project.show" max-width="800px">
+                <template v-slot:activator="{ on }">
+                  <v-btn color="orange" text v-on="on">
+                    <v-icon>mdi-information</v-icon>Metadata
+                  </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title>{{ project.title }}</v-card-title>
+                  <v-divider></v-divider>
+                  <v-card-text style="height: 300px;">
+                    <Metadata :project="project" />
+                  </v-card-text>
+                  <v-divider></v-divider>
+                  <v-card-actions>
+                    <v-btn color="blue darken-1" text @click="project.show = false">Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+
+              <v-btn color="orange" text :to="{ name: 'map', params: { projectId: project.id }}">
+                <v-icon>mdi-map</v-icon>Browse
               </v-btn>
-              <v-btn
-                color="orange"
-                text
-                :to="{ name: 'map', params: { projectId: project.id }}"
-              >Browse</v-btn>
             </v-card-actions>
-            <v-expand-transition>
-              <div v-show="project.show">
-                <v-divider></v-divider>
-                <v-card-text>
-                  <Metadata :project="project" />
-                </v-card-text>
-              </div>
-            </v-expand-transition>
           </v-card>
         </template>
       </v-container>
     </v-content>
+    <v-footer color="lime" app>
+      Hand crafted with
+      <v-icon color="red">mdi-heart</v-icon>by QCooperative
+    </v-footer>
   </v-app>
 </template>
 
@@ -150,5 +144,9 @@ export default {
 
 h4.loading {
   margin-top: 0.35em;
+}
+
+.metadata {
+  z-index: 1001;
 }
 </style>
