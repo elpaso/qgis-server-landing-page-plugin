@@ -4,7 +4,7 @@
       <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
       <v-toolbar-title>{{ project.title }}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon title="Home Page" :to="{ name: 'catalog' }">
+      <v-btn icon title="Home Page" to="/">
         <v-icon>mdi-home-circle</v-icon>
       </v-btn>
     </v-app-bar>
@@ -26,11 +26,13 @@
         </v-layout>
       </v-container>
     </v-content>
+    <MapToolbar class="map-toolbar" :mapObject="map" />
   </v-app>
 </template>
 
 <script>
 import LayerTree from "@/components/LayerTree.vue";
+import MapToolbar from "@/components/MapToolbar.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
@@ -47,7 +49,8 @@ export default {
   components: {
     LayerTree,
     LMap,
-    LTileLayer
+    LTileLayer,
+    MapToolbar
   },
   data: function() {
     return {
@@ -118,6 +121,9 @@ export default {
       .catch(error => {
         this.error = error.message;
       });
+    this.$nextTick(() => {
+      this.$refs["map"].mapObject.zoomControl.remove();
+    });
   },
   methods: {
     onResize() {
@@ -232,5 +238,11 @@ export default {
 
 .v-content {
   padding-bottom: 0 !important;
+}
+
+.map-toolbar {
+  position: fixed;
+  top: 90px;
+  right: 30px;
 }
 </style>
