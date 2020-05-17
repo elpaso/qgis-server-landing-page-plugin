@@ -90,7 +90,7 @@ export default {
       error: ``
     };
   },
-  mounted() {
+  created() {
     fetch(`/index.json`)
       .then(this.handleErrors)
       .then(response => response.json())

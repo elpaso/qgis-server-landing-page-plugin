@@ -9,7 +9,7 @@ services:
       - ${PLUGINS_VOLUME}:/plugins
     working_dir: /plugins/landingpage/app/
     command: >
-      bash -c "/usr/local/bin/yarn build && cp -r ./dist /shared-volume"
+      bash -c "/usr/local/bin/yarn && /usr/local/bin/yarn build && cp -r ./dist /shared-volume"
 
   qgisserver:
     image: elpaso/qgis-server-standalone:latest

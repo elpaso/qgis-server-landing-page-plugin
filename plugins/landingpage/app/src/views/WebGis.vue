@@ -26,7 +26,7 @@
         </v-layout>
       </v-container>
     </v-content>
-    <MapToolbar class="map-toolbar" :mapObject="map" />
+    <MapToolbar class="map-toolbar" :map="map" />
   </v-app>
 </template>
 
