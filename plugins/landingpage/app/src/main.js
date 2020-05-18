@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import App from "./App.vue";
+import App from "@/App.vue";
+import store from "@/store";
 
 import vuetify from "./plugins/vuetify";
 
@@ -94,5 +95,6 @@ router.beforeEach((to, from, next) => {
 new Vue({
   router,
   vuetify,
+  store,
   render: (h) => h(App),
 }).$mount("#app");

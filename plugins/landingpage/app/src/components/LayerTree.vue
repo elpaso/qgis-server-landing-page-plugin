@@ -1,6 +1,6 @@
 <template>
   <v-navigation-drawer absolute hide-overlay stateless width="300px" v-model="drawer">
-    <v-card flat class="mx-auto layertree-container" v-if="project.toc">
+    <v-card flat class="mx-auto layertree-container" v-if="project">
       <v-card-text>
         <h4>Legend</h4>
         <div

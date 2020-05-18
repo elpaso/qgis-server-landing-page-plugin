@@ -20,7 +20,7 @@
           <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
             <l-tile-layer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              v-if="project.capabilities && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+              v-if="project && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
             ></l-tile-layer>
           </l-map>
         </v-layout>
@@ -55,82 +55,103 @@ export default {
   data: function() {
     return {
       map: {},
-      project: {},
       wms_source: {},
-      error: ``,
       expandedToc: false
     };
   },
+  computed: {
+    project() {
+      return this.$store.state.projects[this.projectId];
+    },
+    status() {
+      return this.$store.state.status;
+    },
+    error() {
+      let error = this.$store.state.error;
+      this.$store.dispatch("clearError");
+      return error;
+    }
+  },
+  watch: {
+    project() {
+      this.initializeMap();
+    }
+  },
   mounted() {
-    fetch(`/map/${this.projectId}.json`)
-      .then(this.handleErrors)
-      .then(response => response.json())
-      .then(json => {
-        this.project = json.project;
-        this.loadMap(this.project);
-        this.loading = `project`;
-      })
-      .then(() => {
-        Object.keys(this.project.wms_layers_map)
-          .reverse()
-          .forEach(title => {
-            let node = this.findLayerNode(title, this.project.toc.children);
-            if (node && node.visible) {
-              console.log(`Loading layer ${title}`);
-              this.wms_source._subLayers[
-                node.typename
-              ] = this.wms_source.getLayer(node.typename);
-            } else if (!node) {
-              console.log(`Could not find layer node: ${title}`);
-            } else if (!node.visible) {
-              console.log(`Not loading layer (not visible): ${title}`);
-            }
-          });
-        this.wms_source.refreshOverlay();
-        let layers = this.project.wms_root_name;
-        if (!layers) {
-          let _layers = [];
-          Object.values(this.project.wms_layers_map).forEach(layer_id =>
-            _layers.push(layer_id)
-          );
-          layers = _layers.join(`,`);
-        }
-        let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${layers}&FORMAT=application/json`;
-        fetch(toc_url)
-          .then(this.handleErrors)
-          .then(response => response.json())
-          .then(json => {
-            json.nodes.forEach(layer => {
-              let node = this.findLayerNode(
-                layer.title,
-                this.project.toc.children
-              );
-              if (node) {
-                if (layer.icon) {
-                  node.children.push(layer);
-                } else {
-                  layer.symbols.forEach(symbol => node.children.push(symbol));
-                }
-              }
-            });
-          })
-          .catch(error => {
-            this.error = error.message;
-          });
-      })
-      .catch(error => {
-        this.error = error.message;
-      });
-    this.$nextTick(() => {
-      this.$refs["map"].mapObject.zoomControl.remove();
-    });
+    this.$store.dispatch("setStatus", `loading`);
+
+    if (!this.project) {
+      this.$store.dispatch("getProject", this.projectId);
+    } else {
+      console.log("Project already loaded ...");
+      this.initializeMap();
+    }
   },
   methods: {
-    onResize() {
-      this.$refs["map"].mapObject._onResize();
+    setMap() {
+      this.map = this.$refs["map"].mapObject;
     },
-    setMap(map) {
-      this.map = map;
+    /**
+     * Called when project has been fetched
+     */
+    initializeMap() {
+      console.log(`Watched project changed ${this.project.id}`);
+      this.loadMap(this.project);
+      Object.keys(this.project.wms_layers_map)
+        .reverse()
+        .forEach(title => {
+          let node = this.findLayerNode(title, this.project.toc.children);
+          if (node && node.visible) {
+            console.log(`Loading layer ${title}`);
+            this.wms_source._subLayers[
+              node.typename
+            ] = this.wms_source.getLayer(node.typename);
+          } else if (!node) {
+            console.log(`Could not find layer node: ${title}`);
+          } else if (!node.visible) {
+            console.log(`Not loading layer (not visible): ${title}`);
+          }
+        });
+      this.wms_source.refreshOverlay();
+      let layers = this.project.wms_root_name;
+      if (!layers) {
+        let _layers = [];
+        Object.values(this.project.wms_layers_map).forEach(layer_id =>
+          _layers.push(layer_id)
+        );
+        layers = _layers.join(`,`);
+      }
+      let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${layers}&FORMAT=application/json`;
+      fetch(toc_url)
+        .then(this.handleErrors)
+        .then(response => response.json())
+        .then(json => {
+          json.nodes.forEach(layer => {
+            let node = this.findLayerNode(
+              layer.title,
+              this.project.toc.children
+            );
+            if (node) {
+              if (layer.icon) {
+                node.children.push(layer);
+              } else {
+                layer.symbols.forEach(symbol => node.children.push(symbol));
+              }
+            }
+          });
+        })
+        .catch(error => {
+          //this.error = error.message;
+          console.log(error);
+        });
+      this.$nextTick(() => {
+        this.map.zoomControl.remove();
+      });
+    },
+    onResize() {
+      if (this.map) {
+        this.map._onResize();
+      }
     },
     /**
      * Toggles a layer by typename

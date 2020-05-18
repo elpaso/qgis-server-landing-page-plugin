@@ -8,19 +8,19 @@
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-content>
-      <v-container id="catalog" class="fill-height" fluid v-if="projects">
+      <v-container id="catalog" class="fill-height" fluid v-if="catalog">
         <v-alert v-if="error.length > 0" type="error">{{ error }}</v-alert>
         <v-alert
           type="warning"
           v-if="status == `empty`"
         >This QGIS Server catalog does not contain any project.</v-alert>
-        <template v-if="projects">
+        <template v-if="catalog">
           <v-card
             class="mx-auto mb-4"
             max-width="800"
             min-width="400"
             :key="project.identifier"
-            v-for="project in projects"
+            v-for="project in catalog"
           >
             <l-map :ref="'mapid-'+project.id" @ready="loadMap(project, $event)">
               <l-tile-layer
@@ -83,27 +83,24 @@ export default {
     LTileLayer,
     Metadata
   },
-  data() {
-    return {
-      projects: [],
-      status: `loading`, // [loading,projects,empty]
-      error: ``
-    };
+  computed: {
+    status() {
+      return this.$store.state.status;
+    },
+    catalog() {
+      return this.$store.state.catalog;
+    },
+    error() {
+      let error = this.$store.state.error;
+      this.$store.dispatch("clearError");
+      return error;
+    }
   },
   created() {
-    fetch(`/index.json`)
-      .then(this.handleErrors)
-      .then(response => response.json())
-      .then(json => {
-        json.projects.forEach(element => {
-          element.show = false;
-        });
-        this.projects = json.projects;
-        this.status = this.projects.length ? `projects` : `empty`;
-      })
-      .catch(error => {
-        this.error = error.message;
-      });
+    if (!this.catalog.length) {
+      this.$store.dispatch("setStatus", `loading`);
+      this.$store.dispatch("getCatalog");
+    }
   },
   methods: {
     loadMap(project, map) {
