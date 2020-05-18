@@ -104,8 +104,7 @@ export default new Vuex.Store({
           commit("setToc", { projectId: payload.projectId, toc });
         })
         .catch((error) => {
-          //this.error = error.message;
-          console.log(error);
+          commit("setError", error.message);
         });
     },
   },

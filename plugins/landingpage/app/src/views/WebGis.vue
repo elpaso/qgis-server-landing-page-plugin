@@ -20,7 +20,6 @@
       />
       <v-content>
         <v-container id="map" class="fill-height" fluid>
-          <!--v-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</v-alert-->
           <v-layout>
             <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
               <l-tile-layer
@@ -98,7 +97,7 @@ export default {
       this.$store.dispatch("getProject", this.projectId);
     } else {
       console.log("Project already loaded ...");
-      this.map = this.$refs["map"].mapObject;
+      this.setMap(this.$refs["map"].mapObject);
       this.initializeMap();
     }
   },
@@ -208,18 +207,6 @@ export default {
           }
         }
       }
-    },
-    /**
-     * Handles ajax errors
-     */
-    handleErrors(response) {
-      if (!response) {
-        throw Error(`Error fetching data from QGIS Server`);
-      }
-      if (!response.ok) {
-        throw Error(response.statusText);
-      }
-      return response;
     },
     /**
      * Loads map

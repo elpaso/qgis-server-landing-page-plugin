@@ -120,7 +120,7 @@ export default {
 }
 
 .layertree-container {
-  margin-top: 60px;
+  margin-top: 40px;
 }
 
 ul.layer-group {
