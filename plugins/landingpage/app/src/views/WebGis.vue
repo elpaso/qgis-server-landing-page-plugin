@@ -1,38 +1,45 @@
 <template>
   <v-app id="project">
-    <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark v-if="project">
-      <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
-      <v-toolbar-title>{{ project.title }}</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon title="Home Page" to="/">
-        <v-icon>mdi-home-circle</v-icon>
-      </v-btn>
-    </v-app-bar>
-    <LayerTree
-      :project="project"
-      :drawer="expandedToc"
-      v-on:setLayerVisibility="setLayerVisibility"
-    />
-    <v-content>
-      <v-container id="map" class="fill-height" fluid>
-        <!--v-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</v-alert-->
-        <v-layout>
-          <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
-            <l-tile-layer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              v-if="project && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
-            ></l-tile-layer>
-          </l-map>
-        </v-layout>
-      </v-container>
-    </v-content>
-    <MapToolbar class="map-toolbar" :map="map" />
+    <v-overlay light v-if="status == `loading` && error.length == 0">
+      <v-progress-circular indeterminate color="lime" size="64"></v-progress-circular>
+    </v-overlay>
+    <Error v-if="error.length > 0" :error="error" />
+    <template v-else>
+      <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark v-if="project">
+        <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
+        <v-toolbar-title>{{ project.title }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon title="Home Page" to="/">
+          <v-icon>mdi-home-circle</v-icon>
+        </v-btn>
+      </v-app-bar>
+      <LayerTree
+        :project="project"
+        :drawer="expandedToc"
+        v-on:setLayerVisibility="setLayerVisibility"
+      />
+      <v-content>
+        <v-container id="map" class="fill-height" fluid>
+          <!--v-alert :show="error.length > 0" dismissible variant="danger">{{ error }}</v-alert-->
+          <v-layout>
+            <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
+              <l-tile-layer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                v-if="project && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+              ></l-tile-layer>
+            </l-map>
+          </v-layout>
+        </v-container>
+      </v-content>
+      <MapToolbar class="map-toolbar" :map="map" />
+    </template>
   </v-app>
 </template>
 
 <script>
 import LayerTree from "@/components/LayerTree.vue";
 import MapToolbar from "@/components/MapToolbar.vue";
+import Error from "@/components/Error.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
@@ -50,7 +57,8 @@ export default {
     LayerTree,
     LMap,
     LTileLayer,
-    MapToolbar
+    MapToolbar,
+    Error
   },
   data: function() {
     return {
@@ -62,6 +70,9 @@ export default {
   computed: {
     project() {
       return this.$store.state.projects[this.projectId];
+    },
+    toc() {
+      return this.$store.state.tocs[this.projectId];
     },
     status() {
       return this.$store.state.status;
@@ -75,6 +86,9 @@ export default {
   watch: {
     project() {
       this.initializeMap();
+    },
+    toc() {
+      this.initializeToc();
     }
   },
   mounted() {
@@ -84,6 +98,7 @@ export default {
       this.$store.dispatch("getProject", this.projectId);
     } else {
       console.log("Project already loaded ...");
+      this.map = this.$refs["map"].mapObject;
       this.initializeMap();
     }
   },
@@ -113,45 +128,42 @@ export default {
           }
         });
       this.wms_source.refreshOverlay();
-      let layers = this.project.wms_root_name;
-      if (!layers) {
-        let _layers = [];
-        Object.values(this.project.wms_layers_map).forEach(layer_id =>
-          _layers.push(layer_id)
-        );
-        layers = _layers.join(`,`);
+
+      // Fetch TOC
+      if (!this.toc) {
+        let layers = this.project.wms_root_name;
+        if (!layers) {
+          let _layers = [];
+          Object.values(this.project.wms_layers_map).forEach(layer_id =>
+            _layers.push(layer_id)
+          );
+          layers = _layers.join(`,`);
+        }
+        this.$store.dispatch("getToc", { projectId: this.projectId, layers });
       }
-      let toc_url = `/project/${this.project.id}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${layers}&FORMAT=application/json`;
-      fetch(toc_url)
-        .then(this.handleErrors)
-        .then(response => response.json())
-        .then(json => {
-          json.nodes.forEach(layer => {
-            let node = this.findLayerNode(
-              layer.title,
-              this.project.toc.children
-            );
-            if (node) {
-              if (layer.icon) {
-                node.children.push(layer);
-              } else {
-                layer.symbols.forEach(symbol => node.children.push(symbol));
-              }
-            }
-          });
-        })
-        .catch(error => {
-          //this.error = error.message;
-          console.log(error);
-        });
+
       this.$nextTick(() => {
         this.map.zoomControl.remove();
       });
+      this.$store.dispatch("setStatus", `project`);
     },
     onResize() {
-      if (this.map) {
-        this.map._onResize();
-      }
+      this.$refs["map"].mapObject._onResize();
+    },
+    /**
+     * Called when TOC was fetched
+     */
+    initializeToc() {
+      this.toc.nodes.forEach(layer => {
+        let node = this.findLayerNode(layer.title, this.project.toc.children);
+        if (node) {
+          if (layer.icon) {
+            node.children.push(layer);
+          } else {
+            layer.symbols.forEach(symbol => node.children.push(symbol));
+          }
+        }
+      });
     },
     /**
      * Toggles a layer by typename

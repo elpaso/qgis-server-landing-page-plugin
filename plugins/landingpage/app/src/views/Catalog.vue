@@ -9,7 +9,7 @@
     </v-app-bar>
     <v-content>
       <v-container id="catalog" class="fill-height" fluid v-if="catalog">
-        <v-alert v-if="error.length > 0" type="error">{{ error }}</v-alert>
+        <Error v-if="error.length > 0" :error="error" />
         <v-alert
           type="warning"
           v-if="status == `empty`"
@@ -75,13 +75,15 @@ import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 import WMS from "leaflet-wms/leaflet.wms.js";
 import Metadata from "@/components/Metadata.vue";
+import Error from "@/components/Error.vue";
 
 export default {
   name: "Catalog",
   components: {
     LMap,
     LTileLayer,
-    Metadata
+    Metadata,
+    Error
   },
   computed: {
     status() {
