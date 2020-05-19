@@ -5,9 +5,9 @@
     </v-overlay>
     <Error v-if="error.length > 0" :error="error" />
     <template v-else>
-      <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark v-if="project">
+      <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark>
         <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
-        <v-toolbar-title>{{ project.title }}</v-toolbar-title>
+        <v-toolbar-title v-if="project">{{ project.title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon title="Home Page" to="/">
           <v-icon>mdi-home-circle</v-icon>
