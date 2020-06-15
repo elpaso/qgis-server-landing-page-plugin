@@ -31,6 +31,11 @@
         </v-container>
       </v-content>
       <MapToolbar class="map-toolbar" :map="map" />
+      <IdentifyResults
+        :drawer="showIdentify"
+        :identifyResults="identifyResults"
+        v-on:hideIdentifyResults="showIdentify = false"
+      />
     </template>
   </v-app>
 </template>
@@ -38,6 +43,7 @@
 <script>
 import LayerTree from "@/components/LayerTree.vue";
 import MapToolbar from "@/components/MapToolbar.vue";
+import IdentifyResults from "@/components/IdentifyResults.vue";
 import Error from "@/components/Error.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
@@ -57,13 +63,16 @@ export default {
     LMap,
     LTileLayer,
     MapToolbar,
-    Error
+    Error,
+    IdentifyResults
   },
   data: function() {
     return {
       map: {},
       wms_source: {},
-      expandedToc: false
+      expandedToc: false,
+      showIdentify: false,
+      identifyResults: {}
     };
   },
   computed: {
@@ -233,8 +242,16 @@ export default {
         tileSize: 512,
         transparent: true,
         format: "image/png",
-        dpi: window.devicePixelRatio * 96
+        dpi: window.devicePixelRatio * 96,
+        onGetFeatureInfo: this.onGetFeatureInfo,
+        showWaiting: this.onGetFeatureInfoStarted
       }).addTo(this.map);
+    },
+    onGetFeatureInfo(latLng, info) {
+      this.identifyResults = JSON.parse(info);
+    },
+    onGetFeatureInfoStarted() {
+      this.showIdentify = true;
     }
   }
 };

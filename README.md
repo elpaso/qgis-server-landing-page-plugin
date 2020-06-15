@@ -34,3 +34,11 @@ QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/l
 - map themese
 - base maps switcher
 - open QgsProject without loading layers
+
+
+## Development
+
+From base directory:
+
+1. launch `./run_local.sh`
+2. open another terminal and: `cd plugins/landingpage/app && ../../../vue yarn serve`
