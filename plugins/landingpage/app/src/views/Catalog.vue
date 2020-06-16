@@ -94,7 +94,7 @@ export default {
     },
     error() {
       let error = this.$store.state.error;
-      this.$store.dispatch("clearError");
+      this.$store.commit("clearError");
       return error;
     }
   },

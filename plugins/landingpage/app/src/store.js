@@ -1,7 +1,7 @@
-import Vue from "vue";
-import Vuex from "vuex";
+import Vue from "vue"
+import Vuex from "vuex"
 
-Vue.use(Vuex);
+Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
@@ -10,102 +10,120 @@ export default new Vuex.Store({
     tocs: {},
     error: "",
     status: "loading",
+    activeTool: "",
+    identifyResults: {},
   },
   mutations: {
     setCatalog(state, payload) {
-      state.catalog = payload;
+      state.catalog = payload
     },
     setStatus(state, payload) {
-      console.log(`Mutate status: ${payload}`);
-      state.status = payload;
+      state.status = payload
+    },
+    setActiveTool(state, payload) {
+      state.activeTool = payload
     },
     setError(state, payload) {
-      console.log(`Mutate error: ${payload}`);
-      state.error = payload;
+      state.error = payload
     },
     clearError(state) {
-      console.log(`Mutate clear error`);
-      state.error = "";
+      state.error = ""
+    },
+    clearIdentifyResults(state) {
+      console.log("Clearing identifyResults")
+      Vue.set(state.identifyResults, {})
     },
     setProject(state, project) {
-      console.log(`Mutate set project ${project.id}`);
-      Vue.set(state.projects, project.id, project);
+      Vue.set(state.projects, project.id, project)
     },
     setToc(state, { projectId, toc }) {
-      console.log(`Mutate set toc ${projectId}`);
-      Vue.set(state.tocs, projectId, toc);
+      Vue.set(state.tocs, projectId, toc)
+    },
+    setIdentifyResults(state, { identifyResults }) {
+      console.log(identifyResults)
+      Vue.set(state.identifyResults, identifyResults)
     },
   },
   actions: {
-    clearError({ commit }) {
-      commit("clearError");
-    },
     async getCatalog({ commit }) {
       try {
         fetch(`/index.json`)
           .then((response) => {
             if (!response) {
-              throw Error(`Error fetching data from QGIS Server`);
+              throw Error(`Error fetching data from QGIS Server`)
             }
             if (!response.ok) {
-              throw Error(response.statusText);
+              throw Error(response.statusText)
             }
-            return response;
+            return response
           })
           .then((response) => response.json())
           .then((json) => {
             json.projects.forEach((element) => {
-              element.show = false;
-            });
-            commit("setCatalog", json.projects);
-            commit("setStatus", json.projects.length ? `projects` : `empty`);
+              element.show = false
+            })
+            commit("setCatalog", json.projects)
+            commit("setStatus", json.projects.length ? `projects` : `empty`)
           })
           .catch((error) => {
-            commit("setError", error.message);
-          });
+            commit("setError", error.message)
+          })
       } catch (error) {
-        commit("setError", error.message);
+        commit("setError", error.message)
       }
     },
     async getProject({ commit }, projectId) {
       try {
-        console.log(`Inside getProject ${projectId}`);
+        console.log(`Inside getProject ${projectId}`)
         fetch(`/map/${projectId}.json`)
           .then((response) => {
             if (!response) {
-              throw Error(`Error fetching data from QGIS Server`);
+              throw Error(`Error fetching data from QGIS Server`)
             }
             if (!response.ok) {
-              throw Error(response.statusText);
+              throw Error(response.statusText)
             }
-            return response;
+            return response
           })
           .then((response) => response.json())
           .then((json) => {
-            commit("setProject", json.project);
-            commit("setStatus", `project`);
+            commit("setProject", json.project)
+            commit("setStatus", `project`)
           })
           .catch((error) => {
-            commit("setError", error.message);
-          });
+            commit("setError", error.message)
+          })
       } catch (error) {
-        commit("setError", error.message);
+        commit("setError", error.message)
       }
     },
     setStatus({ commit }, status) {
-      commit("setStatus", status);
+      commit("setStatus", status)
     },
     async getToc({ commit }, payload) {
-      let toc_url = `/project/${payload.projectId}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${payload.layers}&FORMAT=application/json`;
+      let toc_url = `/project/${payload.projectId}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${payload.layers}&FORMAT=application/json`
       fetch(toc_url)
         .then(this.handleErrors)
         .then((response) => response.json())
         .then((toc) => {
-          commit("setToc", { projectId: payload.projectId, toc });
+          commit("setToc", { projectId: payload.projectId, toc })
         })
         .catch((error) => {
-          commit("setError", error.message);
-        });
+          commit("setError", error.message)
+        })
     },
+    /*,
+    async getIdentifyResults({ commit }, payload) {
+      let toc_url = payload.url
+      fetch(toc_url)
+        .then(this.handleErrors)
+        .then((response) => response.json())
+        .then((identifyResults) => {
+          commit("setIdentifyResults", { projectId: payload.projectId, identifyResults })
+        })
+        .catch((error) => {
+          commit("setError", error.message)
+        })
+    },*/
   },
-});
+})

@@ -6,16 +6,16 @@
     <Error v-if="error.length > 0" :error="error" />
     <template v-else>
       <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark>
-        <v-app-bar-nav-icon @click.stop="expandedToc = !expandedToc"></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon @click.stop="expandedSidebar = !expandedSidebar"></v-app-bar-nav-icon>
         <v-toolbar-title v-if="project">{{ project.title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon title="Home Page" to="/">
           <v-icon>mdi-home-circle</v-icon>
         </v-btn>
       </v-app-bar>
-      <LayerTree
-        :project="project"
-        :drawer="expandedToc"
+      <LeftSidebar
+        :drawer="expandedSidebar"
+        :showIdentify="showIdentify"
         v-on:setLayerVisibility="setLayerVisibility"
       />
       <v-content>
@@ -31,19 +31,13 @@
         </v-container>
       </v-content>
       <MapToolbar class="map-toolbar" :map="map" />
-      <IdentifyResults
-        :drawer="showIdentify"
-        :identifyResults="identifyResults"
-        v-on:hideIdentifyResults="showIdentify = false"
-      />
     </template>
   </v-app>
 </template>
 
 <script>
-import LayerTree from "@/components/LayerTree.vue";
 import MapToolbar from "@/components/MapToolbar.vue";
-import IdentifyResults from "@/components/IdentifyResults.vue";
+import LeftSidebar from "@/components/LeftSidebar.vue";
 import Error from "@/components/Error.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
@@ -59,20 +53,19 @@ export default {
   name: "WebGis",
   props: { projectId: String },
   components: {
-    LayerTree,
     LMap,
     LTileLayer,
     MapToolbar,
     Error,
-    IdentifyResults
+    LeftSidebar
   },
   data: function() {
     return {
       map: {},
       wms_source: {},
-      expandedToc: false,
-      showIdentify: false,
-      identifyResults: {}
+      expandedSidebar: false,
+      // Whether the identify tab must be automatically shown
+      showIdentify: false
     };
   },
   computed: {
@@ -87,8 +80,11 @@ export default {
     },
     error() {
       let error = this.$store.state.error;
-      this.$store.dispatch("clearError");
+      this.$store.commit("clearError");
       return error;
+    },
+    activeTool() {
+      return this.$store.state.activeTool;
     }
   },
   watch: {
@@ -189,7 +185,6 @@ export default {
         for (const _type_name of Object.values(
           this.project.wms_layers_map
         ).reverse()) {
-          //let _type_name = this.project.wms_layers_map[title];
           if (_type_name in this.wms_source._subLayers) {
             console.log(`Adding layer: ${typename}`);
             new_sub_layers[_type_name] = this.wms_source._subLayers[_type_name];
@@ -238,20 +233,38 @@ export default {
       ) {
         this.map.fitBounds(jl.getBounds());
       }
+      let that = this;
       this.wms_source = WmsSource.source(`/project/` + project.id + `/?`, {
         tileSize: 512,
         transparent: true,
         format: "image/png",
         dpi: window.devicePixelRatio * 96,
         onGetFeatureInfo: this.onGetFeatureInfo,
-        showWaiting: this.onGetFeatureInfoStarted
+        showWaiting: this.onGetFeatureInfoStarted,
+        activeTool() {
+          return that.activeTool;
+        }
       }).addTo(this.map);
     },
+    /**
+     * GFI results
+     */
     onGetFeatureInfo(latLng, info) {
-      this.identifyResults = JSON.parse(info);
+      this.$store.commit("setIdentifyResults", {
+        identifyResults: JSON.parse(info)
+      });
     },
+    /**
+     * GFI start: show sidebar and results tab
+     */
     onGetFeatureInfoStarted() {
-      this.showIdentify = true;
+      if (this.$store.state.activeTool == "identify") {
+        this.showIdentify = true;
+        this.$store.commit("clearIdentifyResults");
+        this.expandedSidebar = true;
+      } else {
+        this.showIdentify = false;
+      }
     }
   }
 };

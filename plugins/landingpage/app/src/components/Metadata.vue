@@ -129,9 +129,9 @@ export default {
       return str.join(" ");
     }
   },
-  data: function() {
+  data() {
     return {
-      uniqueKey: function(value) {
+      uniqueKey(value) {
         return uuidv4() + value;
       }
     };

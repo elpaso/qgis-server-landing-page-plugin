@@ -5,6 +5,19 @@ import L from "leaflet"
 import WMS from "leaflet-wms/leaflet.wms.js"
 
 var WmsSource = WMS.Source.extend({
+  identify: function(evt) {
+    if (this.options["activeTool"]() == "identify") {
+      // Identify map features in response to map clicks. To customize this
+      // behavior, create a class extending wms.Source and override one or
+      // more of the following hook functions.
+
+      var layers = this.getIdentifyLayers()
+      if (!layers.length) {
+        return
+      }
+      this.getFeatureInfo(evt.containerPoint, evt.latlng, layers, this.showFeatureInfo)
+    }
+  },
   getFeatureInfo: function(point, latlng, layers, callback) {
     // Request WMS GetFeatureInfo and call callback with results
     // (split from identify() to faciliate use outside of map events)

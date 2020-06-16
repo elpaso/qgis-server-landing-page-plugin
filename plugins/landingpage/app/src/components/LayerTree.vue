@@ -1,22 +1,15 @@
 <template>
-  <v-navigation-drawer absolute hide-overlay stateless width="300px" v-model="drawer">
-    <v-card flat class="mx-auto layertree-container" v-if="project">
-      <v-card-text>
-        <h4>Legend</h4>
-        <div
-          id="layertree"
-          v-for="(element, entry) in project.toc.children"
-          :key="uniqueKey(entry)"
-        >
-          <LayerTreeNode
-            :node="element"
-            v-on:toggleLayer="toggleLayer"
-            v-on:toggleGroup="toggleGroup"
-          />
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-navigation-drawer>
+  <v-card flat class="mx-auto layertree-container" v-if="project">
+    <v-card-text>
+      <div id="layertree" v-for="(element, entry) in project.toc.children" :key="uniqueKey(entry)">
+        <LayerTreeNode
+          :node="element"
+          v-on:toggleLayer="toggleLayer"
+          v-on:toggleGroup="toggleGroup"
+        />
+      </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -117,10 +110,6 @@ export default {
 
 #layertree-toggle {
   cursor: pointer;
-}
-
-.layertree-container {
-  margin-top: 40px;
 }
 
 ul.layer-group {
