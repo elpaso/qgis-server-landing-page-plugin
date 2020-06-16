@@ -31,7 +31,7 @@ export default new Vuex.Store({
     },
     clearIdentifyResults(state) {
       console.log("Clearing identifyResults")
-      Vue.set(state.identifyResults, {})
+      state.identifyResults = {}
     },
     setProject(state, project) {
       Vue.set(state.projects, project.id, project)
@@ -40,8 +40,8 @@ export default new Vuex.Store({
       Vue.set(state.tocs, projectId, toc)
     },
     setIdentifyResults(state, { identifyResults }) {
-      console.log(identifyResults)
-      Vue.set(state.identifyResults, identifyResults)
+      console.log("Storing identifyResults", identifyResults)
+      state.identifyResults = identifyResults
     },
   },
   actions: {

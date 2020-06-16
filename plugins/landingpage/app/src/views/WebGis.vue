@@ -14,6 +14,7 @@
         </v-btn>
       </v-app-bar>
       <LeftSidebar
+        :project="project"
         :drawer="expandedSidebar"
         :showIdentify="showIdentify"
         v-on:setLayerVisibility="setLayerVisibility"
@@ -114,7 +115,7 @@ export default {
      * Called when project has been fetched
      */
     initializeMap() {
-      console.log(`Watched project changed ${this.project.id}`);
+      console.log(`Initializing map for project ${this.project.id}`);
       this.loadMap(this.project);
       Object.keys(this.project.wms_layers_map)
         .reverse()

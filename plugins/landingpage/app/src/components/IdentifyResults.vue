@@ -1,7 +1,7 @@
 <template>
   <v-container class="mx-auto">
     <template>
-      <v-row v-if="identifyResults">
+      <v-row v-if="identifyResults.features">
         <v-col class="col-auto">
           <v-card
             hover
@@ -38,6 +38,7 @@ export default {
   },
   computed: {
     identifyResults() {
+      console.log("Computed", this.$store.state.identifyResults.features);
       return this.$store.state.identifyResults;
     }
   }
