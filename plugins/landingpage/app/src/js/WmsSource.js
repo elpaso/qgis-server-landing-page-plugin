@@ -49,26 +49,31 @@ var WmsSource = WMS.Source.extend({
   },
   // Overridden to set info_format to json
   getFeatureInfoParams: function(point, layers) {
-    // Hook to generate parameters for WMS service GetFeatureInfo request
-    var wmsParams, overlay
-    if (this.options.untiled) {
-      // Use existing overlay
-      wmsParams = this._overlay.wmsParams
-    } else {
-      // Create overlay instance to leverage updateWmsParams
-      overlay = this.createOverlay(true)
-      overlay.updateWmsParams(this._map)
-      wmsParams = overlay.wmsParams
-      wmsParams.layers = layers.join(",")
+    try {
+      return this.options["onGetFeatureInfoParams"](point, layers)
+    } catch (error) {
+      // Hook to generate parameters for WMS service GetFeatureInfo request
+      var wmsParams, overlay
+      if (this.options.untiled) {
+        // Use existing overlay
+        wmsParams = this._overlay.wmsParams
+      } else {
+        // Create overlay instance to leverage updateWmsParams
+        overlay = this.createOverlay(true)
+        overlay.updateWmsParams(this._map)
+        wmsParams = overlay.wmsParams
+        wmsParams.layers = layers.join(",")
+      }
+      var infoParams = {
+        request: "GetFeatureInfo",
+        query_layers: layers.join(","),
+        X: Math.round(point.x),
+        Y: Math.round(point.y),
+        info_format: "application/json",
+        WITH_GEOMETRY: 1,
+      }
+      return L.extend({}, wmsParams, infoParams)
     }
-    var infoParams = {
-      request: "GetFeatureInfo",
-      query_layers: layers.join(","),
-      X: Math.round(point.x),
-      Y: Math.round(point.y),
-      info_format: "application/json",
-    }
-    return L.extend({}, wmsParams, infoParams)
   },
 })
 

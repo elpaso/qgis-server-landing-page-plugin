@@ -14,6 +14,7 @@
         </v-btn>
       </v-app-bar>
       <LeftSidebar
+        :map="map"
         :project="project"
         :drawer="expandedSidebar"
         :showIdentify="showIdentify"
@@ -45,6 +46,16 @@ import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 import L from "leaflet";
+
+// Patch for https://github.com/Leaflet/Leaflet/issues/4968#issuecomment-269750768
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png")
+});
+// end patch
 
 L.Control.include({
   _refocusOnMap: L.Util.falseFn // Do nothing.
@@ -246,6 +257,37 @@ export default {
           return that.activeTool;
         }
       }).addTo(this.map);
+
+      // Add an highlight layer to the map
+      let highlightLayer = L.geoJson(
+        { features: [] },
+        {
+          style: function(/* feature */) {
+            return {
+              weight: 2,
+              opacity: 1,
+              color: "yellow"
+            };
+          },
+          onEachFeature: function(feature, layer) {
+            layer.on({
+              mouseover: function(e) {
+                console.log(e.target, feature);
+              },
+              mouseout: function(e) {
+                console.log(e.target);
+              },
+              click: function(e) {
+                console.log(e.target);
+              }
+            });
+          }
+        }
+      ).addTo(this.map);
+      this.map.highlightLayer = highlightLayer;
+
+      // For debugging and development: add llmap to window
+      window.llmap = this.map;
     },
     /**
      * GFI results
@@ -259,6 +301,7 @@ export default {
      * GFI start: show sidebar and results tab
      */
     onGetFeatureInfoStarted() {
+      this.map.highlightLayer.clearLayers();
       if (this.$store.state.activeTool == "identify") {
         this.showIdentify = true;
         this.$store.commit("clearIdentifyResults");
