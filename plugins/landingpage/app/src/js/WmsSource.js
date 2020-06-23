@@ -18,6 +18,30 @@ var WmsSource = WMS.Source.extend({
       this.getFeatureInfo(evt.containerPoint, evt.latlng, layers, this.showFeatureInfo)
     }
   },
+  // Overridden to avoid custom methods to be leaked into the URL
+  createOverlay: function(untiled) {
+    // Create overlay with all options other than untiled & identify
+    var overlayOptions = {}
+    for (var opt in this.options) {
+      if (
+        opt != "untiled" &&
+        opt != "identify" &&
+        // Added:
+        opt != "activeTool" &&
+        opt != "onGetFeatureInfo" &&
+        opt != "onGetFeatureInfoStarted" &&
+        opt != "onGetFeatureInfoParamsEnded" &&
+        opt != "onError"
+      ) {
+        overlayOptions[opt] = this.options[opt]
+      }
+    }
+    if (untiled) {
+      return WMS.overlay(this._url, overlayOptions)
+    } else {
+      return WMS.tileLayer(this._url, overlayOptions)
+    }
+  },
   getFeatureInfo: function(point, latlng, layers, callback) {
     // Request WMS GetFeatureInfo and call callback with results
     // (split from identify() to faciliate use outside of map events)
@@ -37,43 +61,45 @@ var WmsSource = WMS.Source.extend({
     try {
       this.options["onGetFeatureInfo"](latlng, info)
     } catch (error) {
-      console.log(info)
+      this.options["onError"](error)
     }
   },
   showWaiting: function() {
     try {
-      this.options["showWaiting"]()
+      this.options["onGetFeatureInfoStarted"]()
     } catch (error) {
       // do nothing
     }
   },
   // Overridden to set info_format to json
   getFeatureInfoParams: function(point, layers) {
-    try {
-      return this.options["onGetFeatureInfoParams"](point, layers)
-    } catch (error) {
-      // Hook to generate parameters for WMS service GetFeatureInfo request
-      var wmsParams, overlay
-      if (this.options.untiled) {
-        // Use existing overlay
-        wmsParams = this._overlay.wmsParams
-      } else {
-        // Create overlay instance to leverage updateWmsParams
-        overlay = this.createOverlay(true)
-        overlay.updateWmsParams(this._map)
-        wmsParams = overlay.wmsParams
-        wmsParams.layers = layers.join(",")
-      }
-      var infoParams = {
-        request: "GetFeatureInfo",
-        query_layers: layers.join(","),
-        X: Math.round(point.x),
-        Y: Math.round(point.y),
-        info_format: "application/json",
-        WITH_GEOMETRY: 1,
-      }
-      return L.extend({}, wmsParams, infoParams)
+    // Hook to generate parameters for WMS service GetFeatureInfo request
+    var wmsParams, overlay
+    if (this.options.untiled) {
+      // Use existing overlay
+      wmsParams = this._overlay.wmsParams
+    } else {
+      // Create overlay instance to leverage updateWmsParams
+      overlay = this.createOverlay(true)
+      overlay.updateWmsParams(this._map)
+      wmsParams = overlay.wmsParams
+      wmsParams.layers = layers.join(",")
     }
+    var infoParams = {
+      request: "GetFeatureInfo",
+      query_layers: layers.join(","),
+      X: Math.round(point.x),
+      Y: Math.round(point.y),
+      info_format: "application/json",
+      WITH_GEOMETRY: 1,
+    }
+    let result = L.extend({}, wmsParams, infoParams)
+    try {
+      result = this.options["onGetFeatureInfoParamsEnded"](result)
+    } catch (error) {
+      // Do nothing
+    }
+    return result
   },
 })
 

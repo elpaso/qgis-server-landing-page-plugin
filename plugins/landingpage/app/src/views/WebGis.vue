@@ -252,7 +252,9 @@ export default {
         format: "image/png",
         dpi: window.devicePixelRatio * 96,
         onGetFeatureInfo: this.onGetFeatureInfo,
-        showWaiting: this.onGetFeatureInfoStarted,
+        onGetFeatureInfoStarted: this.onGetFeatureInfoStarted,
+        onGetFeatureInfoParamsEnded: this.onGetFeatureInfoParamsEnded,
+        onError: this.onError,
         activeTool() {
           return that.activeTool;
         }
@@ -309,6 +311,32 @@ export default {
       } else {
         this.showIdentify = false;
       }
+    },
+    /**
+     * Called to exclude layers not queryable
+     */
+    onGetFeatureInfoParamsEnded(result) {
+      console.log(result);
+      let query_layers = result.query_layers.split(",");
+      let queryable = [];
+      for (let i = 0; i < query_layers.length; ++i) {
+        if (
+          this.project.wms_layers_queryable.includes(
+            this.project.wms_layers_typename_id_map[query_layers[i]]
+          )
+        ) {
+          queryable.push(query_layers[i]);
+        }
+      }
+      result.query_layers = queryable;
+      return result;
+    },
+    /**
+     * Error handler for the map source WMS layer
+     */
+    onError(error) {
+      console.log("Error:", error);
+      this.$store.commit("setError", error.message);
     }
   }
 };
