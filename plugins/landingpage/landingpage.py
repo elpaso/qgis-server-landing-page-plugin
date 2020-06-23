@@ -38,7 +38,7 @@ from .utils import projects
 
 
 class LandingPageApi(QgsServerOgcApi):
-    """Overrides accept to only trigger on /"""
+    """Overrides accept to only trigger on selected urls"""
 
     def accept(self, url):
         return (
@@ -54,7 +54,7 @@ class LandingPageApi(QgsServerOgcApi):
 
 
 class ProjectLoaderFilter(QgsServerFilter):
-    """Load the specified project"""
+    """Load the specified project from /project/<hash>/ URL fragment"""
 
     project_id_re = re.compile(r'/project/([a-f0-9]{32})')
 
@@ -86,8 +86,8 @@ class LandingPageApiLoader():
         self.api.registerHandler(self.map_handler)
         self.static_handler = StaticApiHandler()
         self.api.registerHandler(self.static_handler)
-        self.handler = LandingPageApiHandler()
-        self.api.registerHandler(self.handler)
+        self.landing_page_handler = LandingPageApiHandler()
+        self.api.registerHandler(self.landing_page_handler)
         serverIface.serviceRegistry().registerApi(self.api)
         self.loader_filter = ProjectLoaderFilter(serverIface)
         serverIface.registerFilter(self.loader_filter, 1)

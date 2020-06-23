@@ -33,6 +33,7 @@ from qgis.core import (
     QgsProviderRegistry,
     QgsApplication,
     QgsDataSourceUri,
+    QgsMapLayer,
 )
 
 
@@ -394,16 +395,28 @@ def project_info(project_path):
         use_ids = capabilities['wmsUseLayerIds']
         # Map layer title to layer name (or id if use_ids)
         wms_layers_map = {}
+        # Maps a typename to a layer id
+        wms_layers_typename_id_map = {}
+        wms_layers_searchable = []
+        wms_layers_queryable = []
 
         for l in p.mapLayers().values():
             if l.name() not in restricted_wms:
                 wms_layers[l.id()] = layer_info(l)
                 name = l.title() if l.title() else l.name()
                 short_name = l.shortName() if l.shortName() else l.name()
+                wms_layers_typename_id_map[short_name] = l.id()
                 wms_layers_map[name] = l.id() if use_ids else short_name
+                if bool(l.flags() & QgsMapLayer.Searchable):
+                    wms_layers_searchable.append(l.id())
+                if bool(l.flags() & QgsMapLayer.Identifiable):
+                    wms_layers_queryable.append(l.id())
 
         info['wms_layers'] = wms_layers
         info['wms_layers_map'] = wms_layers_map
+        info['wms_layers_searchable'] = wms_layers_searchable
+        info['wms_layers_queryable'] = wms_layers_queryable
+        info['wms_layers_typename_id_map'] = wms_layers_typename_id_map
 
         ####################################################
         # TOC tree (WMS published only)
