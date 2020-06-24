@@ -20,7 +20,7 @@
         :showIdentify="showIdentify"
         v-on:setLayerVisibility="setLayerVisibility"
       />
-      <v-content>
+      <v-main>
         <v-container id="map" class="fill-height" fluid>
           <v-layout>
             <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
@@ -33,7 +33,7 @@
             </l-map>
           </v-layout>
         </v-container>
-      </v-content>
+      </v-main>
       <MapToolbar class="map-toolbar" :map="map" />
       <AttributeTable v-if="showAttributeTable" />
     </template>
@@ -370,7 +370,7 @@ export default {
   padding: 0;
 }
 
-.v-content {
+.v-main {
   padding-bottom: 0 !important;
 }
 
@@ -378,5 +378,9 @@ export default {
   position: fixed;
   top: 90px;
   right: 30px;
+}
+
+.leaflet-container {
+  background-color: white;
 }
 </style>

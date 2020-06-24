@@ -23,6 +23,7 @@
               v-on="on"
               class="group-title"
               @click="node.expanded = ! node.expanded"
+              @contextmenu.prevent.stop="showContextMenu($event, node.tree_id_hash)"
             >{{ node.title }}</span>
           </template>
           <div>
@@ -35,7 +36,7 @@
 
       <template v-if="node.layer_type=='vector' && node.children.length">
         <v-expand-transition>
-          <div class="vector-legend" v-if="node.expanded">
+          <div class="vector-legend" v-if="node.expanded" @contextmenu.prevent.stop="function(){}">
             <div
               :id="'node-' + node.tree_id_hash"
               class="v-treeview-node layer-legend"
@@ -78,6 +79,7 @@
             v-on="on"
             class="group-title"
             @click="node.expanded = ! node.expanded"
+            @contextmenu.prevent.stop="function(){}"
           >{{ node.title }}</span>
         </template>
         <div>{{ node.title }}</div>
@@ -100,6 +102,30 @@
         </div>
       </v-expand-transition>
     </div>
+
+    <!-- Context menu -->
+    <v-menu
+      v-model="showMenu"
+      :close-on-content-click="true"
+      :close-on-click="false"
+      :position-x="x"
+      :position-y="y"
+      absolute
+      offset-y
+    >
+      <v-list>
+        <v-list-item
+          v-for="item in options"
+          :key="item.name"
+          @click="onContextMenuOptionClicked(item.name, node.tree_id_hash)"
+        >
+          <v-list-item-icon>
+            <v-icon v-text="item.icon"></v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </div>
 </template>
 
@@ -109,12 +135,49 @@ export default {
   props: {
     node: {}
   },
+  data() {
+    return {
+      x: 0,
+      y: 0,
+      showMenu: false,
+      options: [
+        {
+          title: "Attribute Table",
+          name: "attributes",
+          icon: "mdi-table-large"
+        },
+        {
+          title: "Download",
+          name: "download",
+          icon: "mdi-download"
+        }
+      ]
+    };
+  },
   methods: {
     toggleLayer(tree_id_hash) {
       this.$emit("toggleLayer", tree_id_hash);
     },
     toggleGroup(tree_id_hash) {
       this.$emit("toggleGroup", tree_id_hash);
+    },
+    onContextMenuOptionClicked(name, tree_id_hash) {
+      console.log("onContextMenuOptionClicked", name, tree_id_hash);
+      if (name == "attributes") {
+        this.$store.commit("setShowAttributeTable", tree_id_hash);
+      } else {
+        console.log(name, tree_id_hash);
+      }
+    },
+    showContextMenu(e, tree_id_hash) {
+      e.preventDefault();
+      this.showMenu = false;
+      this.x = e.clientX;
+      this.y = e.clientY;
+      this.$nextTick(() => {
+        console.log("Showing menu for", tree_id_hash);
+        this.showMenu = true;
+      });
     }
   }
 };

@@ -7,7 +7,7 @@
       <v-toolbar-title>QGIS Server Catalog</v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
-    <v-content>
+    <v-main>
       <v-container id="catalog" class="fill-height" fluid v-if="catalog">
         <Error v-if="error.length > 0" :error="error" />
         <v-alert
@@ -61,7 +61,7 @@
           </v-card>
         </template>
       </v-container>
-    </v-content>
+    </v-main>
     <v-footer color="lime" app>
       Hand crafted with
       <v-icon color="red">mdi-heart</v-icon>by QCooperative
