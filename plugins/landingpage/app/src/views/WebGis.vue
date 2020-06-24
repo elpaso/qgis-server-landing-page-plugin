@@ -25,14 +25,17 @@
           <v-layout>
             <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
               <l-tile-layer
+                :visible="baseMap == 'openstreetmap'"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 v-if="project && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+                attribution="&copy; &lt;a href='https://www.openstreetmap.org/copyright'&gt;OpenStreetMap&lt;/a&gt; contributors"
               ></l-tile-layer>
             </l-map>
           </v-layout>
         </v-container>
       </v-content>
       <MapToolbar class="map-toolbar" :map="map" />
+      <AttributeTable v-if="showAttributeTable" />
     </template>
   </v-app>
 </template>
@@ -40,6 +43,7 @@
 <script>
 import MapToolbar from "@/components/MapToolbar.vue";
 import LeftSidebar from "@/components/LeftSidebar.vue";
+import AttributeTable from "@/components/AttributeTable.vue";
 import Error from "@/components/Error.vue";
 import { LMap, LTileLayer } from "vue2-leaflet";
 import WmsSource from "@/js/WmsSource.js";
@@ -69,7 +73,8 @@ export default {
     LTileLayer,
     MapToolbar,
     Error,
-    LeftSidebar
+    LeftSidebar,
+    AttributeTable
   },
   data: function() {
     return {
@@ -84,6 +89,9 @@ export default {
     project() {
       return this.$store.state.projects[this.projectId];
     },
+    showAttributeTable() {
+      return this.$store.state.showAttributeTable;
+    },
     toc() {
       return this.$store.state.tocs[this.projectId];
     },
@@ -97,6 +105,9 @@ export default {
     },
     activeTool() {
       return this.$store.state.activeTool;
+    },
+    baseMap() {
+      return this.$store.state.baseMap;
     }
   },
   watch: {
@@ -108,6 +119,7 @@ export default {
     }
   },
   mounted() {
+    this.$store.commit("clearShowAttributeTable");
     this.$store.dispatch("setStatus", `loading`);
 
     if (!this.project) {

@@ -1,6 +1,22 @@
 <template>
   <v-card flat class="mx-auto layertree-container" v-if="project">
     <v-card-text>
+      <!-- OSM base map -->
+      <div class="base-map">
+        <div class="v-treeview-node">
+          <v-icon color="light-green lighten-3">mdi-checkerboard</v-icon>
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" icon @click="toggleBaseMap('openstreetmap')">
+                <v-icon>mdi-checkbox-{{ baseMap == 'openstreetmap' ? `marked` : `blank-outline` }}</v-icon>
+              </v-btn>
+            </template>
+            Toggle base map visibility
+          </v-tooltip>
+          <span class="group-title">OpenStreetMap</span>
+        </div>
+      </div>
+      <!-- TOC tree -->
       <div id="layertree" v-for="(element, entry) in project.toc.children" :key="uniqueKey(entry)">
         <LayerTreeNode
           :node="element"
@@ -31,6 +47,11 @@ export default {
         return uuidv4();
       }
     };
+  },
+  computed: {
+    baseMap() {
+      return this.$store.state.baseMap;
+    }
   },
   methods: {
     /**
@@ -74,6 +95,15 @@ export default {
         node.visible = !node.visible;
         this.$emit("setLayerVisibility", node.typename, node.visible);
       }
+    },
+    /**
+     * Toggle a single basemap by name
+     */
+    toggleBaseMap(basemap) {
+      if (this.baseMap == basemap) {
+        basemap = "";
+      }
+      this.$store.commit("setBaseMap", basemap);
     },
     /**
      * Toggle a group by tree id hash

@@ -7,15 +7,20 @@ export default new Vuex.Store({
   state: {
     catalog: [],
     projects: {},
+    showAttributeTable: "",
     tocs: {},
     error: "",
     status: "loading",
     activeTool: "",
     identifyResults: {},
+    baseMap: "",
   },
   mutations: {
     setCatalog(state, payload) {
       state.catalog = payload
+    },
+    setBaseMap(state, payload) {
+      state.baseMap = payload
     },
     setStatus(state, payload) {
       state.status = payload
@@ -30,7 +35,6 @@ export default new Vuex.Store({
       state.error = ""
     },
     clearIdentifyResults(state) {
-      console.log("Clearing identifyResults")
       state.identifyResults = {}
     },
     setProject(state, project) {
@@ -40,8 +44,13 @@ export default new Vuex.Store({
       Vue.set(state.tocs, projectId, toc)
     },
     setIdentifyResults(state, { identifyResults }) {
-      console.log("Storing identifyResults", identifyResults)
       state.identifyResults = identifyResults
+    },
+    setShowAttributeTable(state, tree_hash_id) {
+      state.showAttributeTable = tree_hash_id
+    },
+    clearShowAttributeTable(state) {
+      state.showAttributeTable = ""
     },
   },
   actions: {
