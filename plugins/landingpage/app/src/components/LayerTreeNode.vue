@@ -23,7 +23,7 @@
               v-on="on"
               class="group-title"
               @click="node.expanded = ! node.expanded"
-              @contextmenu.prevent.stop="showContextMenu($event, node.tree_id_hash)"
+              @contextmenu.prevent.stop="showContextMenu($event)"
             >{{ node.title }}</span>
           </template>
           <div>
@@ -112,20 +112,21 @@
       :position-y="y"
       absolute
       offset-y
-      @mouseleave="this.showMenu = false"
     >
-      <v-list>
-        <v-list-item
-          v-for="item in options"
-          :key="item.name"
-          @click="onContextMenuOptionClicked(item.name, node.tree_id_hash)"
-        >
-          <v-list-item-icon>
-            <v-icon v-text="item.icon"></v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
+      <div @mouseleave="onMouseLeave">
+        <v-list>
+          <v-list-item
+            v-for="item in options"
+            :key="item.name"
+            @click="onContextMenuOptionClicked(item.name, node.typename)"
+          >
+            <v-list-item-icon>
+              <v-icon v-text="item.icon"></v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </div>
     </v-menu>
   </div>
 </template>
@@ -141,25 +142,8 @@ export default {
       x: 0,
       y: 0,
       // Trick to make sure menu appears on the first click! (see mounted)
-      showMenu: true,
-      options: [
-        {
-          title: "Attribute Table",
-          name: "attributes",
-          icon: "mdi-table-large"
-        },
-        {
-          title: "Download",
-          name: "download",
-          icon: "mdi-download"
-        }
-      ]
+      showMenu: true
     };
-  },
-  watch: {
-    showMenu() {
-      console.log("Show menu changed", this.showMenu);
-    }
   },
   mounted() {
     // Trick to make sure menu appears on the first click!
@@ -172,23 +156,43 @@ export default {
     toggleGroup(tree_id_hash) {
       this.$emit("toggleGroup", tree_id_hash);
     },
-    onContextMenuOptionClicked(name, tree_id_hash) {
-      console.log("onContextMenuOptionClicked", name, tree_id_hash);
+    onContextMenuOptionClicked(name, typename) {
+      console.log("onContextMenuOptionClicked", name, typename);
       if (name == "attributes") {
-        this.$store.commit("setShowAttributeTable", tree_id_hash);
+        this.$store.commit("setAttributeTableLayerTypename", typename);
       } else {
-        console.log(name, tree_id_hash);
+        console.log("Menu item:", name, typename);
       }
     },
-    showContextMenu(e, tree_id_hash) {
+    showContextMenu(e) {
       e.preventDefault();
       this.showMenu = false;
       this.x = e.clientX;
       this.y = e.clientY;
       this.$nextTick(() => {
-        console.log("Showing menu for", tree_id_hash);
         this.showMenu = true;
       });
+    },
+    onMouseLeave() {
+      this.showMenu = false;
+    }
+  },
+  computed: {
+    options() {
+      let options = [];
+      if (this.node["wfs_enabled"]) {
+        options.push({
+          title: "Attribute Table",
+          name: "attributes",
+          icon: "mdi-table-large"
+        });
+      }
+      options.push({
+        title: "Download",
+        name: "download",
+        icon: "mdi-download"
+      });
+      return options;
     }
   }
 };

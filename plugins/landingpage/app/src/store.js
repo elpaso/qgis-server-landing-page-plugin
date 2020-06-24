@@ -7,7 +7,7 @@ export default new Vuex.Store({
   state: {
     catalog: [],
     projects: {},
-    showAttributeTable: "",
+    attributeTableTypename: "",
     tocs: {},
     error: "",
     status: "loading",
@@ -46,11 +46,11 @@ export default new Vuex.Store({
     setIdentifyResults(state, { identifyResults }) {
       state.identifyResults = identifyResults
     },
-    setShowAttributeTable(state, tree_hash_id) {
-      state.showAttributeTable = tree_hash_id
+    setAttributeTableLayerTypename(state, tree_hash_id) {
+      state.attributeTableTypename = tree_hash_id
     },
-    clearShowAttributeTable(state) {
-      state.showAttributeTable = ""
+    clearAttributeTableTypename(state) {
+      state.attributeTableTypename = ""
     },
   },
   actions: {

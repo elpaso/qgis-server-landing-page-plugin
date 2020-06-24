@@ -34,8 +34,12 @@
           </v-layout>
         </v-container>
       </v-main>
-      <MapToolbar class="map-toolbar" :map="map" />
-      <AttributeTable v-if="showAttributeTable" />
+      <MapToolbar class="map-toolbar" :map="map" :project="project" />
+      <AttributeTable
+        :class="expandedSidebar ? 'attributetable-small' : ''"
+        v-if="attributeTableTypename"
+        :project="project"
+      />
     </template>
   </v-app>
 </template>
@@ -89,8 +93,8 @@ export default {
     project() {
       return this.$store.state.projects[this.projectId];
     },
-    showAttributeTable() {
-      return this.$store.state.showAttributeTable;
+    attributeTableTypename() {
+      return this.$store.state.attributeTableTypename;
     },
     toc() {
       return this.$store.state.tocs[this.projectId];
@@ -119,7 +123,7 @@ export default {
     }
   },
   mounted() {
-    this.$store.commit("clearShowAttributeTable");
+    this.$store.commit("clearAttributeTableTypename");
     this.$store.dispatch("setStatus", `loading`);
 
     if (!this.project) {
@@ -382,5 +386,9 @@ export default {
 
 .leaflet-container {
   background-color: white;
+}
+
+.attributetable-small {
+  margin-left: 300px;
 }
 </style>

@@ -72,7 +72,7 @@ def projects():
     return projects
 
 
-def get_toc(project):
+def get_toc(project, info):
     """Get the WMS TOC information for the project"""
 
     use_ids = QgsServerProjectUtils.wmsUseLayerIds(project)
@@ -88,6 +88,10 @@ def get_toc(project):
         }
         try:
             rec['id'] = node.layerId()
+            rec['queryable'] = node.layerId() in info['wms_layers_queryable']
+            rec['searchable'] = node.layerId() in info['wms_layers_searchable']
+            rec['wfs_enabled'] = node.layerId(
+            ) in info['capabilities']['wfsLayerIds']
             short_name = node.layer().shortName() if node.layer(
             ).shortName() else node.layer().name()
             rec['typename'] = node.layer().id() if use_ids else short_name
@@ -420,6 +424,6 @@ def project_info(project_path):
 
         ####################################################
         # TOC tree (WMS published only)
-        info['toc'] = get_toc(p)
+        info['toc'] = get_toc(p, info)
 
     return info
