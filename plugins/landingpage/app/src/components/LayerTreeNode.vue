@@ -105,13 +105,14 @@
 
     <!-- Context menu -->
     <v-menu
-      v-model="showMenu"
+      :value="showMenu"
       :close-on-content-click="true"
       :close-on-click="false"
       :position-x="x"
       :position-y="y"
       absolute
       offset-y
+      @mouseleave="this.showMenu = false"
     >
       <v-list>
         <v-list-item
@@ -139,7 +140,8 @@ export default {
     return {
       x: 0,
       y: 0,
-      showMenu: false,
+      // Trick to make sure menu appears on the first click! (see mounted)
+      showMenu: true,
       options: [
         {
           title: "Attribute Table",
@@ -153,6 +155,15 @@ export default {
         }
       ]
     };
+  },
+  watch: {
+    showMenu() {
+      console.log("Show menu changed", this.showMenu);
+    }
+  },
+  mounted() {
+    // Trick to make sure menu appears on the first click!
+    this.showMenu = false;
   },
   methods: {
     toggleLayer(tree_id_hash) {
