@@ -21,7 +21,7 @@
         v-on:setLayerVisibility="setLayerVisibility"
       />
       <v-main>
-        <v-container id="map" class="fill-height" fluid>
+        <v-container id="map" :class="`fill-height activetool-` + activeTool" fluid>
           <v-layout>
             <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
               <l-tile-layer
@@ -372,6 +372,10 @@ export default {
 
 #map {
   padding: 0;
+}
+
+#map.activetool-identify .leaflet-grab {
+  cursor: pointer !important;
 }
 
 .v-main {
