@@ -20,7 +20,7 @@
         :showIdentify="showIdentify"
         v-on:setLayerVisibility="setLayerVisibility"
       />
-      <v-main>
+      <v-main :class="attributeTableTypename ? `show-table`: ''">
         <v-container id="map" :class="`fill-height activetool-` + activeTool" fluid>
           <v-layout>
             <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
@@ -34,12 +34,19 @@
           </v-layout>
         </v-container>
       </v-main>
-      <MapToolbar class="map-toolbar" :map="map" :project="project" />
+
       <AttributeTable
-        :class="expandedSidebar ? 'attributetable-small' : ''"
+        :class="expandedSidebar ? 'mb-4 attributetable-small' : 'mb-4'"
         v-if="attributeTableTypename"
         :project="project"
       />
+
+      <MapToolbar class="map-toolbar" :map="map" :project="project" />
+
+      <v-footer color="lime" app>
+        Hand crafted with
+        <v-icon color="red">mdi-heart</v-icon>by QCooperative
+      </v-footer>
     </template>
   </v-app>
 </template>
@@ -378,10 +385,9 @@ export default {
   cursor: pointer !important;
 }
 
-.v-main {
+.v-main.show-table {
   padding-bottom: 0 !important;
 }
-
 .map-toolbar {
   position: fixed;
   top: 90px;
