@@ -1,9 +1,30 @@
 <template>
   <v-card level="2">
     <v-card-text>
-      <v-btn class="btn-close" color="red" icon @click="onCloseButtonClicked">
+      <v-btn class="btn-close" icon @click="onCloseButtonClicked">
         <v-icon>mdi-close</v-icon>
       </v-btn>
+      <v-card-title>
+        {{ title }}
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="filterText"
+          append-icon="mdi-magnify"
+          label="Filter"
+          dense
+          single-line
+          hide-details
+        ></v-text-field>
+        <v-spacer></v-spacer>
+        <v-combobox
+          v-model="filterField"
+          :items="searchableFields"
+          label="Search field ..."
+          no-filter
+          hide-details
+          dense
+        ></v-combobox>
+      </v-card-title>
 
       <v-data-table
         dense
@@ -38,6 +59,27 @@ export default {
      */
     typename() {
       return this.$store.state.attributeTableTypename;
+    },
+    /**
+     * Get layer name from typename
+     */
+    title() {
+      return Object.keys(this.project.wms_layers_map).find(
+        key => this.project.wms_layers_map[key] === this.typename
+      );
+    },
+    searchableFields() {
+      let layerId = this.project.wms_layers_typename_id_map[this.typename];
+      let values = [];
+      let fieldNames = Object.keys(this.project.wms_layers[layerId]["fields"]);
+      for (let i = 0; i < fieldNames.length; i++) {
+        let field = this.project.wms_layers[layerId]["fields"][fieldNames[i]];
+        values.push({
+          text: field["label"],
+          value: fieldNames[i]
+        });
+      }
+      return values;
     }
   },
   data() {
@@ -48,7 +90,9 @@ export default {
       sortDesc: null,
       tableData: [],
       tableHeaders: [],
-      numberMatched: 0
+      numberMatched: 0,
+      filterField: null,
+      filterText: ""
     };
   },
   mounted() {
@@ -62,6 +106,9 @@ export default {
       this.loadData();
     },
     sortDesc() {
+      this.loadData();
+    },
+    typename() {
       this.loadData();
     }
   },

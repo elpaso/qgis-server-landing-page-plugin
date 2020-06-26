@@ -80,6 +80,26 @@ class TestLandingPageFileSystemLoader(TestCase):
                          'Geoscientific Information', 'Imagery Base Maps Earth Cover'])
         self.assertEqual(info['metadata']['contacts'][0], {'name': 'Layer Metadata Contact Name', 'role': 'distributor', 'email': 'Layer Metadata Contact Email', 'fax': 'Layer Metadata Contact Fax', 'voice': 'Layer Metadata Contact Voice',
                                                            'organization': 'Layer Metadata Contact Organization', 'position': 'Layer Metadata Contact Position', 'addresses': [{'address': 'street 1', 'city': 'Milan', 'country': 'Italy', 'postalCode': '10021', 'type': 'postal', 'administrativeArea': 'Lombardy'}]})
+        self.assertEqual(info['fields'], {'fid': {'type': 'Integer64',
+                                                  'label': 'fid',
+                                                  'precision': 0,
+                                                  'length': 0,
+                                                  'not_null': True,
+                                                  'unique': True,
+                                                  'has_expression': False,
+                                                  'default': 'Autogenerate',
+                                                  'expression': '',
+                                                  'editable': False},
+                                          'name': {'type': 'String',
+                                                   'label': 'name',
+                                                   'precision': 0,
+                                                   'length': 0,
+                                                   'not_null': False,
+                                                   'unique': False,
+                                                   'has_expression': False,
+                                                   'default': '',
+                                                   'expression': '',
+                                                   'editable': True}})
 
     def test_project_wms(self):
         p0 = QgsProject()
@@ -115,9 +135,10 @@ class TestLandingPageFileSystemLoader(TestCase):
 
     def test_get_toc(self):
         p = QgsProject()
-        p.read(os.path.join(os.path.dirname(__file__), 'projects',
-                            'test_project_wms_grouped_nested_layers.qgs'))
-        toc = get_toc(p)
+        path = os.path.join(os.path.dirname(__file__), 'projects',
+                            'test_project_wms_grouped_nested_layers.qgs')
+        info = project_info(path)
+        toc = info['toc']
         self.assertTrue('osm' in [l['title'] for l in toc['children']])
         osm = toc['children'][-1]
         self.assertEqual(osm['layer_type'], 'raster')

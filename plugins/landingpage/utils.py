@@ -34,6 +34,7 @@ from qgis.core import (
     QgsApplication,
     QgsDataSourceUri,
     QgsMapLayer,
+    QgsFieldConstraints,
 )
 
 
@@ -229,7 +230,45 @@ def layer_info(layer):
         'name': layer.name(),
         'id': layer.id(),
         'crs': layer.crs().authid(),
+        'type': 'vector' if layer.type() == QgsMapLayerType.VectorLayer else 'raster'
     }
+
+    # Vectors only
+    if layer.type() == QgsMapLayerType.VectorLayer:
+        info['pk'] = layer.primaryKeyAttributes()
+
+        fields_data = {}
+        field_index = 0
+        for field in layer.fields():
+            if field.name() in layer.excludeAttributesWfs():
+                field_index += 1
+                continue
+            constraints = field.constraints().constraints()
+            not_null = bool(constraints & QgsFieldConstraints.ConstraintNotNull) and field.constraints().constraintStrength(
+                QgsFieldConstraints.ConstraintNotNull) == QgsFieldConstraints.ConstraintStrengthHard
+            unique = bool(constraints & QgsFieldConstraints.ConstraintUnique) and field.constraints().constraintStrength(
+                QgsFieldConstraints.ConstraintUnique) == QgsFieldConstraints.ConstraintStrengthHard
+            has_expression = bool(constraints & QgsFieldConstraints.ConstraintExpression) and field.constraints().constraintStrength(
+                QgsFieldConstraints.ConstraintExpression) == QgsFieldConstraints.ConstraintStrengthHard
+            default = layer.dataProvider().defaultValueClause(field_index)
+
+            fields_data[field.name()] = {
+                'type': field.typeName(),
+                'label': field.alias() if field.alias() else field.name(),
+                'precision': field.precision(),
+                'length': field.length(),
+                'not_null': not_null,
+                'unique': unique,
+                'has_expression': has_expression,
+                'default': default,
+                'expression': field.constraints().constraintExpression(),
+                'editable': not(not_null and unique and default),
+            }
+
+            field_index += 1
+
+        info['fields'] = fields_data
+
     extent = layer.extent()
     info['extent'] = [extent.xMinimum(), extent.yMinimum(),
                       extent.xMaximum(), extent.yMaximum()]
