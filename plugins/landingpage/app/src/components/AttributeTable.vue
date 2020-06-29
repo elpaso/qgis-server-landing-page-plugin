@@ -33,7 +33,8 @@
         :sort-by.sync="sortBy"
         :sort-desc.sync="sortDesc"
         :server-items-length="numberMatched"
-        :loading="tableHeaders.length == 0"
+        no-data-text="Attribute table has no data, search is case-sensitive, use * to match any character."
+        :loading="tableHeaders.length == 0 || loading"
         :headers="tableHeaders"
         :items="tableData"
         :items-per-page="5"
@@ -92,7 +93,8 @@ export default {
       tableHeaders: [],
       numberMatched: 0,
       filterField: null,
-      filterText: ""
+      filterText: "",
+      loading: false
     };
   },
   mounted() {
@@ -110,6 +112,16 @@ export default {
     },
     typename() {
       this.loadData();
+    },
+    filterField() {
+      if (this.filterText) this.loadData();
+    },
+    filterText() {
+      if (!this.filterField) {
+        this.filterField = this.searchableFields[0];
+      } else {
+        this.loadData();
+      }
     }
   },
   methods: {
@@ -121,6 +133,7 @@ export default {
      */
     async loadData() {
       try {
+        this.loading = true;
         let offset = (this.currentPage - 1) * 5;
         let sorting = "";
         if (this.sortBy) {
@@ -129,8 +142,12 @@ export default {
             sorting += "&sortdesc=1";
           }
         }
+        let filter = "";
+        if (this.filterField && this.filterText) {
+          filter = `&${this.filterField.value}=${this.filterText}*`;
+        }
         fetch(
-          `/project/${this.project.id}/wfs3/collections/${this.typename}/items.json?limit=5&offset=${offset}${sorting}`
+          `/project/${this.project.id}/wfs3/collections/${this.typename}/items.json?limit=5&offset=${offset}${sorting}${filter}`
         )
           .then(response => {
             if (!response) {
@@ -145,7 +162,7 @@ export default {
           })
           .then(response => response.json())
           .then(json => {
-            if (json.features) {
+            if (json.features.length) {
               let headers = [];
               for (let k in json.features[0].properties) {
                 headers.push({ text: k, value: k });
@@ -159,6 +176,8 @@ export default {
               }
               this.tableData = data;
               this.numberMatched = json.numberMatched;
+            } else {
+              this.tableData = [];
             }
           })
           .catch(error => {
@@ -167,6 +186,7 @@ export default {
       } catch (error) {
         this.error = error.message;
       }
+      this.loading = false;
     }
   }
 };
