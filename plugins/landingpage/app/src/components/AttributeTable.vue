@@ -44,7 +44,11 @@
         itemsPerPageOptions: [5],
         itemsPerPageText: ''
       }"
-      ></v-data-table>
+      >
+        <template v-slot:item.zoomToFeature="{ item }">
+          <v-icon @click="zoomToFeature(item.feature)">mdi-magnify</v-icon>
+        </template>
+      </v-data-table>
     </v-card-text>
   </v-card>
 </template>
@@ -54,7 +58,8 @@ const uuidv4 = require("uuid/v4");
 export default {
   name: "AttributeTable",
   props: {
-    project: null
+    project: null,
+    map: null
   },
   computed: {
     /**
@@ -83,6 +88,16 @@ export default {
         });
       }
       return values;
+    },
+    fieldAliases() {
+      let layerId = this.project.wms_layers_typename_id_map[this.typename];
+      let aliases = {};
+      let fieldNames = Object.keys(this.project.wms_layers[layerId]["fields"]);
+      for (let i = 0; i < fieldNames.length; i++) {
+        let field = this.project.wms_layers[layerId]["fields"][fieldNames[i]];
+        aliases[fieldNames[i]] = field["label"];
+      }
+      return aliases;
     },
     hasSearchError() {
       return this.error > 0 && this.filterText.length;
@@ -169,14 +184,18 @@ export default {
           .then(response => response.json())
           .then(json => {
             if (json.features.length) {
-              let headers = [];
+              let headers = [{ text: "", value: "zoomToFeature" }];
               for (let k in json.features[0].properties) {
-                headers.push({ text: k, value: k });
+                headers.push({
+                  text: k,
+                  value: this.fieldAliases[k] ? this.fieldAliases[k] : k
+                });
               }
               this.tableHeaders = headers;
               let data = [];
               for (let i = 0; i < json.features.length; i++) {
                 let dataRow = json.features[i].properties;
+                dataRow["feature"] = json.features[i];
                 dataRow["itemKeyInternalIdentifier"] = uuidv4();
                 data.push(dataRow);
               }
@@ -195,6 +214,11 @@ export default {
         this.tableData = [];
       }
       this.loading = false;
+    },
+    zoomToFeature(feature) {
+      this.map.highlightLayer.clearLayers();
+      this.map.highlightLayer.addData(feature);
+      this.map.setView(this.map.highlightLayer.getBounds().getCenter());
     }
   }
 };

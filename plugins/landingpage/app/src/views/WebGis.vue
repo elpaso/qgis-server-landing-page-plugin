@@ -39,6 +39,7 @@
         :class="expandedSidebar ? 'mb-4 attributetable-small' : 'mb-4'"
         v-if="attributeTableTypename"
         :project="project"
+        :map="this.map"
       />
 
       <MapToolbar class="map-toolbar" :map="map" :project="project" />
