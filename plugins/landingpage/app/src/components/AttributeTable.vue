@@ -11,7 +11,9 @@
           v-model="filterText"
           append-icon="mdi-magnify"
           label="Filter"
+          hint="Case sensitive, use * to match any character"
           dense
+          :error="this.hasSearchError"
           single-line
           hide-details
         ></v-text-field>
@@ -81,6 +83,9 @@ export default {
         });
       }
       return values;
+    },
+    hasSearchError() {
+      return this.error > 0 && this.filterText.length;
     }
   },
   data() {
@@ -133,6 +138,7 @@ export default {
      */
     async loadData() {
       try {
+        this.error = null;
         this.loading = true;
         let offset = (this.currentPage - 1) * 5;
         let sorting = "";
@@ -144,7 +150,7 @@ export default {
         }
         let filter = "";
         if (this.filterField && this.filterText) {
-          filter = `&${this.filterField.value}=${this.filterText}*`;
+          filter = `&${this.filterField.value}=${this.filterText}`;
         }
         fetch(
           `/project/${this.project.id}/wfs3/collections/${this.typename}/items.json?limit=5&offset=${offset}${sorting}${filter}`
@@ -182,9 +188,11 @@ export default {
           })
           .catch(error => {
             this.error = error.message;
+            this.tableData = [];
           });
       } catch (error) {
         this.error = error.message;
+        this.tableData = [];
       }
       this.loading = false;
     }
