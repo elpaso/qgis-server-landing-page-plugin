@@ -2,6 +2,8 @@
 
 A proof of concept plugin for the QGIS server landing page.
 
+![Landing Page](qgis-landing-page-plugin.gif)
+
 ## Motivation
 
 The current out-of-the-box experience for a QGIS Server when you open your browser
