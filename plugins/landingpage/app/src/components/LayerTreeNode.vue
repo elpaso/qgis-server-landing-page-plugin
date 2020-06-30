@@ -1,3 +1,16 @@
+/**
+ *  LayerTreeNode
+ *
+ * Author:    elpaso@itopen.it
+ * Date:      2020-06-30
+ * Copyright: Copyright 2020, ItOpen
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ */
 <template>
   <div :id="node.tree_id_hash">
     <div class="v-treeview-node" v-if="node.is_layer && node.layer_type == 'vector'">
@@ -187,11 +200,13 @@ export default {
           icon: "mdi-table-large"
         });
       }
+      /* Not in scope for first release
       options.push({
         title: "Download",
         name: "download",
         icon: "mdi-download"
       });
+      */
       return options;
     }
   }
