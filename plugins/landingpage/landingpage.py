@@ -64,6 +64,8 @@ class ProjectLoaderFilter(QgsServerFilter):
         try:
             os.environ['QGIS_PROJECT_FILE'] = project_dict[self.project_id_re.findall(
                 handler.url())[0]]
+            QgsMessageLog.logMessage('Found project: %s' %
+                                     os.environ['QGIS_PROJECT_FILE'])
         except Exception as ex:
             QgsMessageLog.logMessage('Could not get project from url: %s' % ex)
 
