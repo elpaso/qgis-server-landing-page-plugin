@@ -13,7 +13,7 @@
  */
 <template>
   <v-navigation-drawer absolute hide-overlay stateless width="300px" v-model="drawer">
-    <v-tabs class="mt-12" grow v-model="activeTab">
+    <v-tabs class="mt-12 mb-10" grow v-model="activeTab">
       <v-tab key="0">Legend</v-tab>
       <v-tab key="1" v-if="showIdentify">Results</v-tab>
 
