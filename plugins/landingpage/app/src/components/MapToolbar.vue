@@ -32,9 +32,10 @@
     >
       <v-icon>mdi-information-outline</v-icon>
     </v-btn>
-    <v-btn class="btn-fix mt-1" dark fab small @click="map._onResize()" color="blue">
+    <!-- not yet implemented:
+    v-btn class="btn-fix mt-1" dark fab small @click="map._onResize()" color="blue">
       <v-icon>mdi-selection-drag</v-icon>
-    </v-btn>
+    </v-btn-->
   </v-layout>
   <!--/v-toolbar-->
 </template>

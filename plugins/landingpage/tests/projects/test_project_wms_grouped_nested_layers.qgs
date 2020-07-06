@@ -62,7 +62,7 @@
         </layer-tree-layer>
       </layer-tree-group>
     </layer-tree-group>
-    <layer-tree-layer patch_size="0,0" id="osm_85c8eb94_b6fa_437b_b91a_7816ef2e2243" checked="Qt::Checked" source="GPKG:/home/ale/dev/Dockers/qgis-server-standalone-docker/plugins/landingpage/tests/projects/test_project_wms_grouped_layers.gpkg:osm" providerKey="gdal" legend_split_behavior="0" expanded="1" legend_exp="" name="osm">
+    <layer-tree-layer patch_size="0,0" id="osm_85c8eb94_b6fa_437b_b91a_7816ef2e2243" checked="Qt::Checked" source="GPKG:test_project_wms_grouped_layers.gpkg:osm" providerKey="gdal" legend_split_behavior="0" expanded="1" legend_exp="" name="osm">
       <customproperties/>
     </layer-tree-layer>
     <custom-order enabled="0">
