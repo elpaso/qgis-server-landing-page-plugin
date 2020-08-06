@@ -61,7 +61,7 @@
                 <img class="symbol" :src="`data:image/png;base64,${child.icon}`" />
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
-                    <span v-on="on" @click="node.expanded = ! node.expanded">{{ child.title }}</span>
+                    <span class="vector-legend-entry-label" v-on="on">{{ child.title }}</span>
                   </template>
                   <div>{{ child.title }}</div>
                 </v-tooltip>
@@ -228,20 +228,23 @@ export default {
 .group-title,
 .node-title,
 .vector-legend-entry {
-  /*white-space: nowrap;*/
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .vector-legend-entry span {
   margin-left: 10px;
 }
-.vector-legend-entry img {
+.vector-legend-entry img.symbol {
   vertical-align: middle;
+  height: 16px;
+  width: 16px;
 }
 .vector-legend {
   margin-left: 1.3em;
 }
-
+.vector-legend-entry-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .layer-legend {
   margin-left: 16px;
 }
