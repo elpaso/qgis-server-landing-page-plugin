@@ -33,7 +33,7 @@ const routes = [
       metaTags: [
         {
           name: "description",
-          content: "List of available project in QGIS Server catalog.",
+          content: "List of available projects in QGIS Server catalog.",
         },
       ],
     },

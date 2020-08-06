@@ -47,6 +47,8 @@ class TestLandingPageFileSystemLoader(TestCase):
     def setUpClass(cls):
         os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(
             __file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
+        os.environ['QGIS_SERVER_PROJECTS_PG_CONNECTIONS'] = os.path.join(os.path.dirname(
+            __file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
 

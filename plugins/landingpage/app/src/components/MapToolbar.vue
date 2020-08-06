@@ -53,7 +53,7 @@ export default {
     onIdentifyToolClicked() {
       this.$store.state.activeTool =
         this.activeTool == "identify" ? "" : "identify";
-      console.log(this.$store.state.activeTool);
+      //console.log(this.$store.state.activeTool);
     }
   },
   computed: {

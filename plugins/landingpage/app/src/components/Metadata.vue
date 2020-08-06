@@ -93,19 +93,21 @@
         <v-card-text>
           <v-list>
             <v-list-item-group>
-              <v-list-item :href="'/project/' + project.id + '/wfs3'">
-                <v-list-item-content>
-                  <v-list-item-title>OAPIF/WFS3</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
+              <template v-if="project.capabilities.wfsLayerIds.length">
+                <v-list-item :href="'/project/' + project.id + '/wfs3'">
+                  <v-list-item-content>
+                    <v-list-item-title>OAPIF/WFS3</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
 
-              <v-list-item
-                :href="'/project/' + project.id + '/?SERVICE=WFS&amp;REQUEST=GetCapabilities'"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>WFS GetCapabilities</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
+                <v-list-item
+                  :href="'/project/' + project.id + '/?SERVICE=WFS&amp;REQUEST=GetCapabilities'"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>WFS GetCapabilities</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </template>
 
               <v-list-item
                 :href="'/project/' + project.id + '/?SERVICE=WMS&amp;REQUEST=GetCapabilities'"

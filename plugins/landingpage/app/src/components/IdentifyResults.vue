@@ -66,7 +66,7 @@ export default {
   },
   computed: {
     identifyResults() {
-      console.log("Computed", this.$store.state.identifyResults.features);
+      //console.log("Computed", this.$store.state.identifyResults.features);
       return this.$store.state.identifyResults;
     }
   },

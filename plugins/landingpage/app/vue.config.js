@@ -9,7 +9,7 @@ module.exports = {
   },
   "runtimeCompiler": true,
   "devServer": {
-    "proxy": "http://192.168.99.46:8001"
+    "proxy": "http://192.168.99.47:8001"
   },
   "transpileDependencies": [
     "vuetify"

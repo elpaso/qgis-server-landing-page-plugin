@@ -1,0 +1,1 @@
+// TODO: map footer with scale, CRS etc.

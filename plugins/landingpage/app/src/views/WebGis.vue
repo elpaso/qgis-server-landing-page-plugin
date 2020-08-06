@@ -62,6 +62,7 @@ import WmsSource from "@/js/WmsSource.js";
 import "leaflet/dist/leaflet.css";
 import { latLng, Polygon } from "leaflet";
 import L from "leaflet";
+import Utils from "@/js/Utils.js";
 
 // Patch for https://github.com/Leaflet/Leaflet/issues/4968#issuecomment-269750768
 delete L.Icon.Default.prototype._getIconUrl;
@@ -137,7 +138,7 @@ export default {
     if (!this.project) {
       this.$store.dispatch("getProject", this.projectId);
     } else {
-      console.log("Project already loaded ...");
+      //console.log("Project already loaded ...");
       this.setMap(this.$refs["map"].mapObject);
       this.initializeMap();
     }
@@ -150,35 +151,34 @@ export default {
      * Called when project has been fetched
      */
     initializeMap() {
-      console.log(`Initializing map for project ${this.project.id}`);
+      //console.log(`Initializing map for project ${this.project.id}`);
+      if (!this.project.toc) {
+        //console.log(`initializeMap error: no project toc!`);
+      }
       this.loadMap(this.project);
       Object.keys(this.project.wms_layers_map)
         .reverse()
         .forEach(title => {
+          if (!this.project.toc) {
+            //console.log(`Loading layer ${title} failed: no toc!`);
+          }
           let node = this.findLayerNode(title, this.project.toc.children);
           if (node && node.visible) {
-            console.log(`Loading layer ${title}`);
+            //console.log(`Loading layer ${title}`);
             this.wms_source._subLayers[
               node.typename
             ] = this.wms_source.getLayer(node.typename);
           } else if (!node) {
             console.log(`Could not find layer node: ${title}`);
           } else if (!node.visible) {
-            console.log(`Not loading layer (not visible): ${title}`);
+            //console.log(`Not loading layer (not visible): ${title}`);
           }
         });
       this.wms_source.refreshOverlay();
 
       // Fetch TOC
       if (!this.toc) {
-        let layers = this.project.wms_root_name;
-        if (!layers) {
-          let _layers = [];
-          Object.values(this.project.wms_layers_map).forEach(layer_id =>
-            _layers.push(layer_id)
-          );
-          layers = _layers.join(`,`);
-        }
+        let layers = Utils.getAllLayers(this.project);
         this.$store.dispatch("getToc", { projectId: this.projectId, layers });
       }
 
@@ -210,7 +210,7 @@ export default {
      */
     setLayerVisibility(typename, visible) {
       if (typename in this.wms_source._subLayers && !visible) {
-        console.log(`Removing layer: ${typename}`);
+        //console.log(`Removing layer: ${typename}`);
         this.wms_source.removeSubLayer(typename);
       } else if (visible && !(typename in this.wms_source._subLayers)) {
         // We need to respect drawing order!
@@ -222,7 +222,7 @@ export default {
           this.project.wms_layers_map
         ).reverse()) {
           if (_type_name in this.wms_source._subLayers) {
-            console.log(`Adding layer: ${typename}`);
+            //console.log(`Adding layer: ${typename}`);
             new_sub_layers[_type_name] = this.wms_source._subLayers[_type_name];
           }
         }
@@ -340,7 +340,7 @@ export default {
      * Called to exclude layers not queryable
      */
     onGetFeatureInfoParamsEnded(result) {
-      console.log(result);
+      //console.log(result);
       let query_layers = result.query_layers.split(",");
       let queryable = [];
       for (let i = 0; i < query_layers.length; ++i) {

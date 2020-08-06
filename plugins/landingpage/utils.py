@@ -57,14 +57,12 @@ def projects():
                     projects[project_key] = os.path.join(directory, f)
 
     if os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS', False):
-        md = QgsProviderRegistry.instance().providerMetadata('postgres')
         for pg_connection in os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS').split('||'):
             # List projects
             app = QgsApplication.instance()
             reg = app.projectStorageRegistry()
             assert reg.projectStorages() != []
             storage = reg.projectStorageFromType('postgresql')
-            uri = QgsDataSourceUri(pg_connection)
             for project in storage.listProjects(pg_connection):
                 project_key = hashlib.md5(
                     (project + pg_connection).encode('utf8')).hexdigest()
@@ -185,6 +183,8 @@ def _read_links(metadata):
             'description': l.description,
             'url': l.url,
             'size': l.size,
+            'format': l.format,
+            'type': l.type,
             'mimeType': l.mimeType,
         })
     return links

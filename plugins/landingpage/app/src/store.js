@@ -96,7 +96,7 @@ export default new Vuex.Store({
     },
     async getProject({ commit }, projectId) {
       try {
-        console.log(`Inside getProject ${projectId}`)
+        //console.log(`Inside getProject ${projectId}`)
         fetch(`/map/${projectId}.json`)
           .then((response) => {
             if (!response) {
@@ -122,6 +122,9 @@ export default new Vuex.Store({
     setStatus({ commit }, status) {
       commit("setStatus", status)
     },
+    /**
+     * Fetches the TOC style icons from GetLegendGraphics
+     */
     async getToc({ commit }, payload) {
       let toc_url = `/project/${payload.projectId}/?SERVICE=WMS&REQUEST=GetLegendGraphics&LAYERS=${payload.layers}&FORMAT=application/json`
       fetch(toc_url)

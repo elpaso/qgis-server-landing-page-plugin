@@ -9,11 +9,38 @@
     </v-app-bar>
     <v-main>
       <v-container id="catalog" class="fill-height" fluid v-if="catalog">
-        <Error v-if="error.length > 0" :error="error" />
-        <v-alert
-          type="warning"
-          v-if="status == `empty`"
-        >This QGIS Server catalog does not contain any project.</v-alert>
+        <v-row align="center" v-if="error.length > 0 || status == `empty`">
+          <v-col cols="12">
+            <Error v-if="error.length > 0" :error="error" />
+            <v-alert type="warning" v-if="status == `empty`">
+              <div>This QGIS Server catalog does not contain any project.</div>
+              <p>
+                The projects (.QGS and .QGZ files) are searched in
+                directories set by the environment variable
+                <code>QGIS_SERVER_PROJECTS_DIRECTORIES</code> (multiple paths
+                can be specified by joining them with
+                <code>||</code>).
+              </p>
+              <p>
+                Example:
+                <br />
+                <code>QGIS_SERVER_PROJECTS_DIRECTORIES=/path/to/my/projects||/another_path/to/my/projects</code>
+              </p>
+              <p>
+                PostGIS projects are searched in the connections set by the environment variable
+                <code>QGIS_SERVER_PROJECTS_PG_CONNECTIONS</code> (multiple connections can be specified by joining them
+                with
+                <code>||</code>).
+              </p>
+              <p>
+                Example:
+                <br />
+                <code>QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&amp;dbname=mydatabase&amp;schema=public&amp;username=myusername&amp;password=mypassword</code>
+              </p>
+            </v-alert>
+          </v-col>
+        </v-row>
+
         <template v-if="catalog">
           <v-card
             class="mx-auto mb-4"
@@ -64,7 +91,8 @@
     </v-main>
     <v-footer color="lime" app>
       Hand crafted with
-      <v-icon color="red">mdi-heart</v-icon>by QCooperative
+      <v-icon color="red">mdi-heart</v-icon>by
+      <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
     </v-footer>
   </v-app>
 </template>
@@ -76,6 +104,7 @@ import { latLng, Polygon } from "leaflet";
 import WMS from "leaflet-wms/leaflet.wms.js";
 import Metadata from "@/components/Metadata.vue";
 import Error from "@/components/Error.vue";
+import Utils from "@/js/Utils.js";
 
 export default {
   name: "Catalog",
@@ -123,11 +152,13 @@ export default {
       ) {
         map.fitBounds(jl.getBounds());
       }
+
       WMS.overlay(`/project/${project.id}/?`, {
-        layers: project.wms_root_name,
+        layers: Utils.getAllLayers(project),
         transparent: true,
         format: "image/png"
       }).addTo(map);
+
     }
   }
 };

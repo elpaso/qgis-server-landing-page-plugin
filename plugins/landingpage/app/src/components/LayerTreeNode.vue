@@ -170,7 +170,7 @@ export default {
       this.$emit("toggleGroup", tree_id_hash);
     },
     onContextMenuOptionClicked(name, typename) {
-      console.log("onContextMenuOptionClicked", name, typename);
+      //console.log("onContextMenuOptionClicked", name, typename);
       if (name == "attributes") {
         this.$store.commit("setAttributeTableLayerTypename", typename);
       } else {
@@ -228,12 +228,15 @@ export default {
 .group-title,
 .node-title,
 .vector-legend-entry {
-  white-space: nowrap;
+  /*white-space: nowrap;*/
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .vector-legend-entry span {
   margin-left: 10px;
+}
+.vector-legend-entry img {
+  vertical-align: middle;
 }
 .vector-legend {
   margin-left: 1.3em;
