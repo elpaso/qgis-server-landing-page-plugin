@@ -46,7 +46,8 @@
 
       <v-footer color="lime" app>
         Hand crafted with
-        <v-icon color="red">mdi-heart</v-icon>by QCooperative
+        <v-icon color="red">mdi-heart</v-icon> by
+        <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
       </v-footer>
     </template>
   </v-app>
