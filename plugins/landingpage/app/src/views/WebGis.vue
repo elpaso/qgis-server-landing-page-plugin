@@ -46,7 +46,7 @@
 
       <v-footer color="lime" app>
         Hand crafted with
-        <v-icon color="red">mdi-heart</v-icon> by
+        <v-icon color="red">mdi-heart</v-icon>by
         <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
       </v-footer>
     </template>
@@ -257,6 +257,12 @@ export default {
       let south = project.geographic_extent[1];
       let east = project.geographic_extent[2];
       let north = project.geographic_extent[3];
+      if (project.initial_extent) {
+        west = project.initial_extent[0];
+        south = project.initial_extent[1];
+        east = project.initial_extent[2];
+        north = project.initial_extent[3];
+      }
       let p1 = new latLng(south, west);
       let p2 = new latLng(north, west);
       let p3 = new latLng(north, east);
