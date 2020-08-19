@@ -37,6 +37,8 @@ from qgis.core import (
     QgsFieldConstraints,
 )
 
+from qgis.gui import QgsMapCanvas
+
 
 def projects():
     """Returns a list of available projects from various sources:
@@ -314,7 +316,28 @@ def project_info(project_path):
 
     info = {}
     p = QgsProject()
+    canvas = QgsMapCanvas()
+
+    def _readCanvasSettings(xmlDocument):
+        canvas.readProject(xmlDocument)
+
+    p.readProject.connect(_readCanvasSettings, Qt.DirectConnection)
+
     if p.read(project_path):
+
+        # initial extent
+        extent = canvas.extent()
+        if p.crs().authid() != 4326:
+            ct = QgsCoordinateTransform(
+                p.crs(), QgsCoordinateReferenceSystem.fromEpsgId(4326), p.transformContext())
+            extent = ct.transform(extent)
+
+        info['initial_extent'] = [
+            extent.xMinimum(),
+            extent.yMinimum(),
+            extent.xMaximum(),
+            extent.yMaximum(),
+        ]
 
         ####################################################
         # Main section
