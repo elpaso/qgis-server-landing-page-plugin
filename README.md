@@ -64,10 +64,20 @@ QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&d
 
 ## Building
 
-The source tree does not contain a built client javascript application, to build the application you need to:
+The source tree does not contain a built client javascript application.
 
-```bash
-cd plugins/landingpage/app
+A Vue Docker image is necessary. You can build it thanks to the
+`Dockerfile.vue.dockerfile` file or just pull the image:
+
+```
+docker pull elpaso/vue-builder
+```
+
+Then, to build the application you need to:
+
+ ```bash
+ cd plugins/landingpage/app
+../../../vue yarn install
 ../../../vue yarn build
 ```
 
