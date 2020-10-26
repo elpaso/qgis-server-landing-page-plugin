@@ -43,23 +43,23 @@ from qgis.gui import QgsMapCanvas
 def projects():
     """Returns a list of available projects from various sources:
 
-    - QGIS_SERVER_PROJECTS_DIRECTORIES directories
-    - QGIS_SERVER_PROJECTS_PG_CONNECTIONS postgres connections
+    - QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES directories
+    - QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS postgres connections
 
     :return: hash of project paths (or other storage identifiers) with a digest key
     :rtype: dict
     """
     projects = {}
 
-    if os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORIES', False):
-        for directory in os.environ.get('QGIS_SERVER_PROJECTS_DIRECTORIES').split('||'):
+    if os.environ.get('QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES', False):
+        for directory in os.environ.get('QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES').split('||'):
             for f in os.listdir(directory):
                 if f.upper().endswith('.QGS') or f.upper().endswith('.QGZ'):
                     project_key = hashlib.md5(f.encode('utf8')).hexdigest()
                     projects[project_key] = os.path.join(directory, f)
 
-    if os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS', False):
-        for pg_connection in os.environ.get('QGIS_SERVER_PROJECTS_PG_CONNECTIONS').split('||'):
+    if os.environ.get('QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS', False):
+        for pg_connection in os.environ.get('QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS').split('||'):
             # List projects
             app = QgsApplication.instance()
             reg = app.projectStorageRegistry()

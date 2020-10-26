@@ -50,7 +50,7 @@ can be specified by the following configuration option passed as environment var
 
 
 ```bash
-QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
+QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
 ```
 
 Note: the `||` allows to specify multiple search paths.
@@ -59,7 +59,7 @@ Additionally, tf you decide to store your project into a PostGIS DB, you can als
 the connection(s) using the conventional notation used internally by QGIS:
 
 ```bash
-QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&dbname=landing_page_test&schema=public&username=elpaso&password=mypassword
+QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&dbname=landing_page_test&schema=public&username=elpaso&password=mypassword
 ```
 
 ## Building
@@ -103,7 +103,7 @@ PUBLIC_PORT=8002
 # Can be overridden, default to /usr/share/qgis/resources/server/api/
 QGIS_SERVER_API_RESOURCES_DIRECTORY=/usr/share/qgis/resources/server/api/
 # Landing page plugin (container paths, separated by || if more than one)
-QGIS_SERVER_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
+QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/plugins/landingpage/tests/projects||/plugins/landingpage/tests/projects2
 ```
 
 `QGIS_SERVER_LANDINGPAGE_DEBUG` when activated will print all json information inside the templates.

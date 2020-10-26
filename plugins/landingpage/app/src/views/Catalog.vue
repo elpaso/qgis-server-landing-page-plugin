@@ -1,7 +1,11 @@
 <template>
   <v-app id="catalog">
     <v-overlay light v-if="status == `loading` && error.length == 0">
-      <v-progress-circular indeterminate color="lime" size="64"></v-progress-circular>
+      <v-progress-circular
+        indeterminate
+        color="lime"
+        size="64"
+      ></v-progress-circular>
     </v-overlay>
     <v-app-bar app dense hide-on-scroll color="green" dark>
       <v-toolbar-title>QGIS Server Catalog</v-toolbar-title>
@@ -15,27 +19,32 @@
             <v-alert type="warning" v-if="status == `empty`">
               <div>This QGIS Server catalog does not contain any project.</div>
               <p>
-                The projects (.QGS and .QGZ files) are searched in
-                directories set by the environment variable
-                <code>QGIS_SERVER_PROJECTS_DIRECTORIES</code> (multiple paths
-                can be specified by joining them with
+                The projects (.QGS and .QGZ files) are searched in directories
+                set by the environment variable
+                <code>QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES</code>
+                (multiple paths can be specified by joining them with
                 <code>||</code>).
               </p>
               <p>
                 Example:
                 <br />
-                <code>QGIS_SERVER_PROJECTS_DIRECTORIES=/path/to/my/projects||/another_path/to/my/projects</code>
+                <code
+                  >QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/path/to/my/projects||/another_path/to/my/projects</code
+                >
               </p>
               <p>
-                PostGIS projects are searched in the connections set by the environment variable
-                <code>QGIS_SERVER_PROJECTS_PG_CONNECTIONS</code> (multiple connections can be specified by joining them
-                with
+                PostGIS projects are searched in the connections set by the
+                environment variable
+                <code>QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS</code>
+                (multiple connections can be specified by joining them with
                 <code>||</code>).
               </p>
               <p>
                 Example:
                 <br />
-                <code>QGIS_SERVER_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&amp;dbname=mydatabase&amp;schema=public&amp;username=myusername&amp;password=mypassword</code>
+                <code
+                  >QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&amp;dbname=mydatabase&amp;schema=public&amp;username=myusername&amp;password=mypassword</code
+                >
               </p>
             </v-alert>
           </v-col>
@@ -49,20 +58,29 @@
             :key="project.identifier"
             v-for="project in catalog"
           >
-            <l-map :ref="'mapid-'+project.id" @ready="loadMap(project, $event)">
+            <l-map
+              :ref="'mapid-' + project.id"
+              @ready="loadMap(project, $event)"
+            >
               <l-tile-layer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                v-if="project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+                v-if="
+                  project.capabilities.wmsOutputCrsList.includes('EPSG:3857')
+                "
               ></l-tile-layer>
             </l-map>
             <v-card-title>{{ project.title }}</v-card-title>
-            <v-card-subtitle
-              class="description"
-              v-if="project.description"
-            >{{ project.description }}</v-card-subtitle>
+            <v-card-subtitle class="description" v-if="project.description">{{
+              project.description
+            }}</v-card-subtitle>
 
             <v-card-actions>
-              <v-dialog class="metadata" scrollable v-model="project.show" max-width="800px">
+              <v-dialog
+                class="metadata"
+                scrollable
+                v-model="project.show"
+                max-width="800px"
+              >
                 <template v-slot:activator="{ on }">
                   <v-btn color="orange" text v-on="on">
                     <v-icon>mdi-information</v-icon>Metadata
@@ -71,17 +89,26 @@
                 <v-card>
                   <v-card-title>{{ project.title }}</v-card-title>
                   <v-divider></v-divider>
-                  <v-card-text style="height: 300px;">
+                  <v-card-text style="height: 300px">
                     <Metadata :project="project" />
                   </v-card-text>
                   <v-divider></v-divider>
                   <v-card-actions>
-                    <v-btn color="blue darken-1" text @click="project.show = false">Close</v-btn>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="project.show = false"
+                      >Close</v-btn
+                    >
                   </v-card-actions>
                 </v-card>
               </v-dialog>
 
-              <v-btn color="orange" text :to="{ name: 'map', params: { projectId: project.id }}">
+              <v-btn
+                color="orange"
+                text
+                :to="{ name: 'map', params: { projectId: project.id } }"
+              >
                 <v-icon>mdi-map</v-icon>Browse
               </v-btn>
             </v-card-actions>
@@ -112,7 +139,7 @@ export default {
     LMap,
     LTileLayer,
     Metadata,
-    Error
+    Error,
   },
   computed: {
     status() {
@@ -125,7 +152,7 @@ export default {
       let error = this.$store.state.error;
       this.$store.commit("clearError");
       return error;
-    }
+    },
   },
   created() {
     if (!this.catalog.length) {
@@ -156,11 +183,10 @@ export default {
       WMS.overlay(`/project/${project.id}/?`, {
         layers: Utils.getAllLayers(project),
         transparent: true,
-        format: "image/png"
+        format: "image/png",
       }).addTo(map);
-
-    }
-  }
+    },
+  },
 };
 </script>
 

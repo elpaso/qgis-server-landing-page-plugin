@@ -158,7 +158,6 @@ export default {
       }
       this.loadMap(this.project);
       Object.keys(this.project.wms_layers_map)
-        .reverse()
         .forEach(title => {
           if (!this.project.toc) {
             //console.log(`Loading layer ${title} failed: no toc!`);
@@ -221,7 +220,7 @@ export default {
         let new_sub_layers = {};
         for (const _type_name of Object.values(
           this.project.wms_layers_map
-        ).reverse()) {
+        )) {
           if (_type_name in this.wms_source._subLayers) {
             //console.log(`Adding layer: ${typename}`);
             new_sub_layers[_type_name] = this.wms_source._subLayers[_type_name];

@@ -45,9 +45,9 @@ class TestLandingPageFileSystemLoader(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(
+        os.environ['QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES'] = os.path.join(os.path.dirname(
             __file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
-        os.environ['QGIS_SERVER_PROJECTS_PG_CONNECTIONS'] = os.path.join(os.path.dirname(
+        os.environ['QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS'] = os.path.join(os.path.dirname(
             __file__), 'projects') + '||' + os.path.join(os.path.dirname(__file__), 'projects2')
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
@@ -157,7 +157,7 @@ class TestLandingPagePostgresLoader(TestCase):
     @classmethod
     def setUpClass(cls):
         # Make sure there are no other loaders
-        del os.environ['QGIS_SERVER_PROJECTS_DIRECTORIES']
+        del os.environ['QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES']
         cls.pg_conn = os.environ.get('QGIS_SERVER_LANDING_PAGE_PG_TEST', False)
         if not cls.pg_conn:  # default
             cls.pg_conn = "host=localhost port=5432 schema=public"
@@ -177,7 +177,7 @@ class TestLandingPagePostgresLoader(TestCase):
         uri = QgsDataSourceUri(cls.pg_conn)
         cls.pg_storage_conn = "postgresql://{host}:{port}?sslmode=disable&dbname=landing_page_test&schema=public".format(
             host=uri.host(), port=uri.port())
-        os.environ['QGIS_SERVER_PROJECTS_PG_CONNECTIONS'] = cls.pg_storage_conn
+        os.environ['QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS'] = cls.pg_storage_conn
         cls.server = QgsServer()
         cls.api = LandingPageApiLoader(cls.server.serverInterface())
 
