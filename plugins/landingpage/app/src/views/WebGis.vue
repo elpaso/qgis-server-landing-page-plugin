@@ -1,12 +1,18 @@
 <template>
   <v-app id="project">
     <v-overlay light v-if="status == `loading` && error.length == 0">
-      <v-progress-circular indeterminate color="lime" size="64"></v-progress-circular>
+      <v-progress-circular
+        indeterminate
+        color="lime"
+        size="64"
+      ></v-progress-circular>
     </v-overlay>
     <Error v-if="error.length > 0" :error="error" />
     <template v-else>
       <v-app-bar app dense collapse-on-scroll clipped-left color="green" dark>
-        <v-app-bar-nav-icon @click.stop="expandedSidebar = !expandedSidebar"></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon
+          @click.stop="expandedSidebar = !expandedSidebar"
+        ></v-app-bar-nav-icon>
         <v-toolbar-title v-if="project">{{ project.title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon title="Home Page" to="/">
@@ -20,14 +26,26 @@
         :showIdentify="showIdentify"
         v-on:setLayerVisibility="setLayerVisibility"
       />
-      <v-main :class="attributeTableTypename ? `show-table`: ''">
-        <v-container id="map" :class="`fill-height activetool-` + activeTool" fluid>
+      <v-main :class="attributeTableTypename ? `show-table` : ''">
+        <v-container
+          id="map"
+          :class="`fill-height activetool-` + activeTool"
+          fluid
+        >
           <v-layout>
-            <l-map ref="map" v-resize="onResize" @ready="setMap" style="z-index: 0;">
+            <l-map
+              ref="map"
+              v-resize="onResize"
+              @ready="setMap"
+              style="z-index: 0"
+            >
               <l-tile-layer
                 :visible="baseMap == 'openstreetmap'"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                v-if="project && project.capabilities.wmsOutputCrsList.includes('EPSG:3857')"
+                v-if="
+                  project &&
+                  project.capabilities.wmsOutputCrsList.includes('EPSG:3857')
+                "
                 attribution="&copy; &lt;a href='https://www.openstreetmap.org/copyright'&gt;OpenStreetMap&lt;/a&gt; contributors"
               ></l-tile-layer>
             </l-map>
@@ -71,12 +89,12 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
   iconUrl: require("leaflet/dist/images/marker-icon.png"),
-  shadowUrl: require("leaflet/dist/images/marker-shadow.png")
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 // end patch
 
 L.Control.include({
-  _refocusOnMap: L.Util.falseFn // Do nothing.
+  _refocusOnMap: L.Util.falseFn, // Do nothing.
 });
 
 export default {
@@ -88,15 +106,15 @@ export default {
     MapToolbar,
     Error,
     LeftSidebar,
-    AttributeTable
+    AttributeTable,
   },
-  data: function() {
+  data: function () {
     return {
       map: {},
       wms_source: {},
       expandedSidebar: false,
       // Whether the identify tab must be automatically shown
-      showIdentify: false
+      showIdentify: false,
     };
   },
   computed: {
@@ -122,7 +140,7 @@ export default {
     },
     baseMap() {
       return this.$store.state.baseMap;
-    }
+    },
   },
   watch: {
     project() {
@@ -130,7 +148,7 @@ export default {
     },
     toc() {
       this.initializeToc();
-    }
+    },
   },
   mounted() {
     this.$store.commit("clearAttributeTableTypename");
@@ -157,23 +175,26 @@ export default {
         //console.log(`initializeMap error: no project toc!`);
       }
       this.loadMap(this.project);
-      Object.keys(this.project.wms_layers_map)
-        .forEach(title => {
-          if (!this.project.toc) {
-            //console.log(`Loading layer ${title} failed: no toc!`);
-          }
-          let node = this.findLayerNode(title, this.project.toc.children);
-          if (node && node.visible) {
-            //console.log(`Loading layer ${title}`);
-            this.wms_source._subLayers[
-              node.typename
-            ] = this.wms_source.getLayer(node.typename);
-          } else if (!node) {
-            console.log(`Could not find layer node: ${title}`);
-          } else if (!node.visible) {
-            //console.log(`Not loading layer (not visible): ${title}`);
-          }
-        });
+      Object.values(this.getOrderedLayerTypenames()).forEach((typename) => {
+        if (!this.project.toc) {
+          //console.log(`Loading layer ${title} failed: no toc!`);
+        }
+        let node = this.findLayerNodeByTypename(
+          typename,
+          this.project.toc.children
+        );
+        if (node && node.visible) {
+          //console.log(`Loading layer ${typename}`);
+          this.wms_source._subLayers[node.typename] = this.wms_source.getLayer(
+            node.typename
+          );
+        } else if (!node) {
+          console.log(`Could not find layer node: ${typename}`);
+        } else if (!node.visible) {
+          //console.log(`Not loading layer (not visible): ${typename}`);
+        }
+      });
+      console.log(this.wms_source._subLayers);
       this.wms_source.refreshOverlay();
 
       // Fetch TOC
@@ -194,13 +215,13 @@ export default {
      * Called when TOC was fetched
      */
     initializeToc() {
-      this.toc.nodes.forEach(layer => {
+      this.toc.nodes.forEach((layer) => {
         let node = this.findLayerNode(layer.title, this.project.toc.children);
         if (node) {
           if (layer.icon) {
             node.children.push(layer);
           } else {
-            layer.symbols.forEach(symbol => node.children.push(symbol));
+            layer.symbols.forEach((symbol) => node.children.push(symbol));
           }
         }
       });
@@ -218,9 +239,7 @@ export default {
           typename
         );
         let new_sub_layers = {};
-        for (const _type_name of Object.values(
-          this.project.wms_layers_map
-        )) {
+        for (const _type_name of this.getOrderedLayerTypenames()) {
           if (_type_name in this.wms_source._subLayers) {
             //console.log(`Adding layer: ${typename}`);
             new_sub_layers[_type_name] = this.wms_source._subLayers[_type_name];
@@ -242,6 +261,22 @@ export default {
             return children[i];
           }
           let res = this.findLayerNode(title, children[i].children);
+          if (res) {
+            return res;
+          }
+        }
+      }
+    },
+    /**
+     * Find a layer by typename
+     */
+    findLayerNodeByTypename(typename, children) {
+      if (children) {
+        for (let i = 0; i < children.length; ++i) {
+          if (children[i].typename == typename) {
+            return children[i];
+          }
+          let res = this.findLayerNode(typename, children[i].children);
           if (res) {
             return res;
           }
@@ -287,33 +322,33 @@ export default {
         onError: this.onError,
         activeTool() {
           return that.activeTool;
-        }
+        },
       }).addTo(this.map);
 
       // Add an highlight layer to the map
       let highlightLayer = L.geoJson(
         { features: [] },
         {
-          style: function(/* feature */) {
+          style: function (/* feature */) {
             return {
               weight: 2,
               opacity: 1,
-              color: "yellow"
+              color: "yellow",
             };
           },
-          onEachFeature: function(feature, layer) {
+          onEachFeature: function (feature, layer) {
             layer.on({
-              mouseover: function(e) {
+              mouseover: function (e) {
                 console.log(e.target, feature);
               },
-              mouseout: function(e) {
+              mouseout: function (e) {
                 console.log(e.target);
               },
-              click: function(e) {
+              click: function (e) {
                 console.log(e.target);
-              }
+              },
             });
-          }
+          },
         }
       ).addTo(this.map);
       this.map.highlightLayer = highlightLayer;
@@ -326,7 +361,7 @@ export default {
      */
     onGetFeatureInfo(latLng, info) {
       this.$store.commit("setIdentifyResults", {
-        identifyResults: JSON.parse(info)
+        identifyResults: JSON.parse(info),
       });
     },
     /**
@@ -367,8 +402,27 @@ export default {
     onError(error) {
       console.log("Error:", error);
       this.$store.commit("setError", error.message);
-    }
-  }
+    },
+    /**
+     * Convenience: return ordered list of layer typenames from the toc
+     * the order is reversed, because of WMS drawing order
+     */
+    getOrderedLayerTypenames() {
+      let _getLayers = (parent, layerList) => {
+        if (parent.is_layer) {
+          layerList.push(parent.typename);
+        } else {
+          for (let i = 0; i < parent.children.length; ++i) {
+            _getLayers(parent.children[i], layerList);
+          }
+        }
+      };
+      let layerList = [];
+      _getLayers(this.project.toc, layerList);
+      //console.log(layerList)
+      return layerList.reverse();
+    },
+  },
 };
 </script>
 

@@ -21,7 +21,11 @@
           <v-tooltip top>
             <template v-slot:activator="{ on }">
               <v-btn v-on="on" icon @click="toggleBaseMap('openstreetmap')">
-                <v-icon>mdi-checkbox-{{ baseMap == 'openstreetmap' ? `marked` : `blank-outline` }}</v-icon>
+                <v-icon
+                  >mdi-checkbox-{{
+                    baseMap == "openstreetmap" ? `marked` : `blank-outline`
+                  }}</v-icon
+                >
               </v-btn>
             </template>
             Toggle base map visibility
@@ -30,7 +34,11 @@
         </div>
       </div>
       <!-- TOC tree -->
-      <div id="layertree" v-for="(element, entry) in project.toc.children" :key="uniqueKey(entry)">
+      <div
+        id="layertree"
+        v-for="(element, entry) in project.toc.children"
+        :key="uniqueKey(entry)"
+      >
         <LayerTreeNode
           :node="element"
           v-on:toggleLayer="toggleLayer"
@@ -49,22 +57,22 @@ export default {
   props: {
     projectId: String,
     project: {},
-    drawer: null
+    drawer: null,
   },
   components: {
-    LayerTreeNode
+    LayerTreeNode,
   },
-  data: function() {
+  data: function () {
     return {
-      uniqueKey: function() {
+      uniqueKey: function () {
         return uuidv4();
-      }
+      },
     };
   },
   computed: {
     baseMap() {
       return this.$store.state.baseMap;
-    }
+    },
   },
   methods: {
     /**
@@ -142,7 +150,7 @@ export default {
         }
       }
     }
-  }
+  },
 };
 </script>
 
