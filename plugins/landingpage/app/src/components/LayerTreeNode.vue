@@ -13,7 +13,10 @@
  */
 <template>
   <div :id="node.tree_id_hash">
-    <div class="v-treeview-node" v-if="node.is_layer && node.layer_type == 'vector'">
+    <div
+      class="v-treeview-node"
+      v-if="node.is_layer && node.layer_type == 'vector'"
+    >
       <div class="node-title">
         <v-icon
           data-toggle="collapse"
@@ -21,11 +24,16 @@
           aria-controls="'node-' + node.tree_id_hash"
           @click="node.expanded = !node.expanded"
           v-if="node.children.length"
-        >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon>
+          >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon
+        >
         <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on" icon @click="toggleLayer(node.tree_id_hash)">
-              <v-icon>mdi-checkbox-{{ node.visible ? `marked` : `blank-outline` }}</v-icon>
+              <v-icon
+                >mdi-checkbox-{{
+                  node.visible ? `marked` : `blank-outline`
+                }}</v-icon
+              >
             </v-btn>
           </template>
           Toggle layer visibility
@@ -35,9 +43,10 @@
             <span
               v-on="on"
               class="group-title"
-              @click="node.expanded = ! node.expanded"
+              @click="node.expanded = !node.expanded"
               @contextmenu.prevent.stop="showContextMenu($event)"
-            >{{ node.title }}</span>
+              >{{ node.title }}</span
+            >
           </template>
           <div>
             {{ node.title }}
@@ -47,9 +56,13 @@
         </v-tooltip>
       </div>
 
-      <template v-if="node.layer_type=='vector' && node.children.length">
+      <template v-if="node.layer_type == 'vector' && node.children.length">
         <v-expand-transition>
-          <div class="vector-legend" v-if="node.expanded" @contextmenu.prevent.stop="function(){}">
+          <div
+            class="vector-legend"
+            v-if="node.expanded"
+            @contextmenu.prevent.stop="function () {}"
+          >
             <div
               :id="'node-' + node.tree_id_hash"
               class="v-treeview-node layer-legend"
@@ -58,10 +71,17 @@
               :aria-expanded="node.expanded ? 'true' : 'false'"
             >
               <div class="v-treeview-node vector-legend-entry">
-                <img class="symbol" :src="`data:image/png;base64,${child.icon}`" />
+                <img
+                  v-if="child.icon"
+                  class="symbol"
+                  :src="`data:image/png;base64,${child.icon}`"
+                />
+                <span v-else class="symbol" />
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
-                    <span class="vector-legend-entry-label" v-on="on">{{ child.title }}</span>
+                    <span class="vector-legend-entry-label" v-on="on">{{
+                      child.title
+                    }}</span>
                   </template>
                   <div>{{ child.title }}</div>
                 </v-tooltip>
@@ -76,12 +96,17 @@
       <v-icon
         @click="node.expanded = !node.expanded"
         v-if="node.layer_type != 'raster'"
-      >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon>
+        >mdi-menu-{{ node.expanded ? `down` : `right` }}</v-icon
+      >
       <v-icon v-else color="light-green lighten-3">mdi-checkerboard</v-icon>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" icon @click="toggleGroup(node.tree_id_hash)">
-            <v-icon>mdi-checkbox-{{ node.visible ? `marked` : `blank-outline` }}</v-icon>
+            <v-icon
+              >mdi-checkbox-{{
+                node.visible ? `marked` : `blank-outline`
+              }}</v-icon
+            >
           </v-btn>
         </template>
         Toggle group visibility
@@ -91,9 +116,10 @@
           <span
             v-on="on"
             class="group-title"
-            @click="node.expanded = ! node.expanded"
-            @contextmenu.prevent.stop="function(){}"
-          >{{ node.title }}</span>
+            @click="node.expanded = !node.expanded"
+            @contextmenu.prevent.stop="function () {}"
+            >{{ node.title }}</span
+          >
         </template>
         <div>{{ node.title }}</div>
         <div v-if="node.description">{{ node.description }}</div>
@@ -148,14 +174,14 @@
 export default {
   name: "LayerTreeNode",
   props: {
-    node: {}
+    node: {},
   },
   data() {
     return {
       x: 0,
       y: 0,
       // Trick to make sure menu appears on the first click! (see mounted)
-      showMenu: true
+      showMenu: true,
     };
   },
   mounted() {
@@ -188,7 +214,7 @@ export default {
     },
     onMouseLeave() {
       this.showMenu = false;
-    }
+    },
   },
   computed: {
     options() {
@@ -197,7 +223,7 @@ export default {
         options.push({
           title: "Attribute Table",
           name: "attributes",
-          icon: "mdi-table-large"
+          icon: "mdi-table-large",
         });
       }
       /* Not in scope for first release
@@ -208,8 +234,8 @@ export default {
       });
       */
       return options;
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -238,6 +264,14 @@ export default {
   height: 16px;
   width: 16px;
 }
+.vector-legend-entry span.symbol {
+  vertical-align: middle;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  margin-left: 0;
+}
+
 .vector-legend {
   margin-left: 1.3em;
 }
