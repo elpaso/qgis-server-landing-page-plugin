@@ -18,7 +18,7 @@
       <v-tab key="1" v-if="showIdentify">Results</v-tab>
 
       <v-tab-item key="0">
-        <LayerTree :project="project" v-on:setLayerVisibility="setLayerVisibility" />
+        <LayerTree :project="project" v-on:setLayerVisibility="setLayerVisibility" :map="map" />
       </v-tab-item>
 
       <v-tab-item key="1" v-if="showIdentify">

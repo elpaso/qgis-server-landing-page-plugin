@@ -27,6 +27,7 @@ export default new Vuex.Store({
     activeTool: "",
     identifyResults: {},
     baseMap: "",
+    mapScaleDenominator: 1,
   },
   mutations: {
     setCatalog(state, payload) {
@@ -64,6 +65,9 @@ export default new Vuex.Store({
     },
     clearAttributeTableTypename(state) {
       state.attributeTableTypename = ""
+    },
+    setMapScaleDenominator(state, mapScaleDenominator) {
+      state.mapScaleDenominator = mapScaleDenominator
     },
   },
   actions: {

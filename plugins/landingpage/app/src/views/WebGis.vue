@@ -29,7 +29,11 @@
       <v-main :class="attributeTableTypename ? `show-table` : ''">
         <v-container
           id="map"
-          :class="`fill-height activetool-` + activeTool"
+          :class="
+            `fill-height activetool-` +
+            activeTool +
+            (expandedSidebar ? ' expanded-sidebar' : '')
+          "
           fluid
         >
           <v-layout>
@@ -62,17 +66,14 @@
 
       <MapToolbar class="map-toolbar" :map="map" :project="project" />
 
-      <v-footer color="lime" app>
-        Hand crafted with
-        <v-icon color="red">mdi-heart</v-icon>by
-        <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
-      </v-footer>
+      <MapFooter />
     </template>
   </v-app>
 </template>
 
 <script>
 import MapToolbar from "@/components/MapToolbar.vue";
+import MapFooter from "@/components/MapFooter.vue";
 import LeftSidebar from "@/components/LeftSidebar.vue";
 import AttributeTable from "@/components/AttributeTable.vue";
 import Error from "@/components/Error.vue";
@@ -104,6 +105,7 @@ export default {
     LMap,
     LTileLayer,
     MapToolbar,
+    MapFooter,
     Error,
     LeftSidebar,
     AttributeTable,
@@ -194,7 +196,7 @@ export default {
           //console.log(`Not loading layer (not visible): ${typename}`);
         }
       });
-      console.log(this.wms_source._subLayers);
+      //console.log(this.wms_source._subLayers);
       this.wms_source.refreshOverlay();
 
       // Fetch TOC
@@ -339,19 +341,27 @@ export default {
           onEachFeature: function (feature, layer) {
             layer.on({
               mouseover: function (e) {
-                console.log(e.target, feature);
+                e;
+                //console.log(e.target, feature);
               },
               mouseout: function (e) {
-                console.log(e.target);
+                e;
+                //console.log(e.target);
               },
               click: function (e) {
-                console.log(e.target);
+                e;
+                //console.log(e.target);
               },
             });
           },
         }
       ).addTo(this.map);
       this.map.highlightLayer = highlightLayer;
+
+      L.control.scale().addTo(this.map);
+
+      this.updateMapScale();
+      this.map.on("move", this.updateMapScale, this);
 
       // For debugging and development: add llmap to window
       window.llmap = this.map;
@@ -422,11 +432,34 @@ export default {
       //console.log(layerList)
       return layerList.reverse();
     },
+    /**
+     * Compute map scale
+     */
+    updateMapScale() {
+      let map = this.map;
+      let width = map.getSize().x;
+      let bounds = map.getBounds();
+      let extentHeight = bounds.getNorth() - bounds.getSouth();
+      let minLon = bounds.getWest();
+      let maxLon = bounds.getEast();
+      let midLat = bounds.getSouth() + extentHeight / 2;
+      let conversionFactor = 39.3700787;
+      let dpi = 96 * window.devicePixelRatio; // this.$store.state.dpi;
+      let dpm = dpi * conversionFactor;
+      let physicalWidth = width / dpm;
+      let delta = map.distance(
+        L.latLng(midLat, minLon),
+        L.latLng(midLat, maxLon)
+      );
+      let scaleDenom = delta / physicalWidth;
+      this.$store.commit("setMapScaleDenominator", scaleDenom);
+      return scaleDenom;
+    },
   },
 };
 </script>
 
-<style scoped>
+<style>
 #wrapper {
   height: 100%;
 }
@@ -461,5 +494,9 @@ export default {
 
 .attributetable-small {
   margin-left: 300px;
+}
+
+.expanded-sidebar .leaflet-left {
+  left: 300px !important;
 }
 </style>

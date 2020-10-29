@@ -58,6 +58,7 @@ export default {
     projectId: String,
     project: {},
     drawer: null,
+    map: null,
   },
   components: {
     LayerTreeNode,
@@ -149,7 +150,7 @@ export default {
           this.setGroupNodeVisibility(groupNode.children[i], visible);
         }
       }
-    }
+    },
   },
 };
 </script>

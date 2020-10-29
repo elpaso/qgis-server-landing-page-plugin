@@ -64,13 +64,16 @@
             @contextmenu.prevent.stop="function () {}"
           >
             <div
-              :id="'node-' + node.tree_id_hash"
               class="v-treeview-node layer-legend"
               v-for="child in node.children"
-              :key="child.title"
+              :id="'node-' + node.tree_id_hash"
+              :key="child.title + uuid()"
               :aria-expanded="node.expanded ? 'true' : 'false'"
             >
-              <div class="v-treeview-node vector-legend-entry">
+              <div
+                v-if="isVisible(child)"
+                class="v-treeview-node vector-legend-entry"
+              >
                 <img
                   v-if="child.icon"
                   class="symbol"
@@ -171,6 +174,7 @@
 </template>
 
 <script>
+const uuidv4 = require("uuid/v4");
 export default {
   name: "LayerTreeNode",
   props: {
@@ -189,6 +193,24 @@ export default {
     this.showMenu = false;
   },
   methods: {
+    uuid() {
+      return uuidv4();
+    },
+    /**
+     * Checks for legend item map scale
+     */
+    isVisible(child) {
+      let scaleMaxDenom = child.scaleMaxDenom;
+      let scaleMinDenom = child.scaleMinDenom;
+      let mapScaleDenominator = this.$store.state.mapScaleDenominator;
+      if (scaleMinDenom && mapScaleDenominator < scaleMinDenom) {
+        return false;
+      }
+      if (scaleMaxDenom && mapScaleDenominator > scaleMaxDenom) {
+        return false;
+      }
+      return true;
+    },
     toggleLayer(tree_id_hash) {
       this.$emit("toggleLayer", tree_id_hash);
     },
