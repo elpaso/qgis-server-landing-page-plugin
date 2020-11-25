@@ -17,7 +17,7 @@
           <v-col cols="12">
             <Error v-if="error.length > 0" :error="error" />
             <v-alert type="warning" v-if="status == `empty`">
-              <div>This QGIS Server catalog does not contain any project.</div>
+              <h2>This QGIS Server catalog does not contain any project.</h2>
               <p>
                 The projects (.QGS and .QGZ files) are searched in directories
                 set by the environment variable
@@ -33,7 +33,7 @@
                 >
               </p>
               <p>
-                PostGIS projects are searched in the connections set by the
+                Postgres projects are searched in the connections set by the
                 environment variable
                 <code>QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS</code>
                 (multiple connections can be specified by joining them with
@@ -43,7 +43,7 @@
                 Example:
                 <br />
                 <code
-                  >QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS=postgresql://myhost:myport?sslmode=disable&amp;dbname=mydatabase&amp;schema=public&amp;username=myusername&amp;password=mypassword</code
+                  >QGIS_SERVER_LANDING_PAGE_PROJECTS_PG_CONNECTIONS=postgresql://myusername:mypassword@myhost:myport?sslmode=disable&amp;dbname=mydatabase&amp;schema=public</code
                 >
               </p>
             </v-alert>
