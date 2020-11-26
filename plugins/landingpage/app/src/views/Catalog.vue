@@ -117,9 +117,7 @@
       </v-container>
     </v-main>
     <v-footer color="lime" app>
-      Hand crafted with
-      <v-icon color="red">mdi-heart</v-icon>by
-      <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
+      <!-- your logo/ad here -->
     </v-footer>
   </v-app>
 </template>
@@ -204,5 +202,8 @@ h4.loading {
 
 .metadata {
   z-index: 1001;
+}
+.v-footer {
+    height: 1.5rem;
 }
 </style>

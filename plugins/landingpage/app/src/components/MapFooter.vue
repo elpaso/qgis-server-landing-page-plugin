@@ -16,9 +16,7 @@
     <v-layout>
         <v-row no-gutters>
             <v-col align="left">
-                Hand crafted with
-                <v-icon color="red">mdi-heart</v-icon>by
-                <a href="https://www.qcooperative.net" target="_blank">QCooperative</a>
+                <!-- your logo/ad here -->
             </v-col>
             <v-col align="right">
                 <span>Scale 1:{{ this.mapScaleDenominator() }}</span>
